@@ -16,13 +16,21 @@ import {
 import type { Capture } from "@/lib/psn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { AlertCircleIcon, KeyRoundIcon } from "lucide-react";
+import { AlertCircleIcon, KeyRoundIcon, Gamepad2 } from "lucide-react";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { toast } from "sonner";
 
 const fetcher = async ([
@@ -260,7 +268,24 @@ export function CapturesBrowser({ className }: { className?: string }) {
           <div className="text-sm text-muted-foreground text-center py-12">
             No captures found.
           </div>
-        ) : null}
+        ) : (
+          <div className="flex justify-center">
+            <Empty className="border md:p-6 max-w-md flex-none">
+              <EmptyHeader>
+                <EmptyMedia variant="icon" className="size-12">
+                  <Gamepad2 />
+                </EmptyMedia>
+                <EmptyTitle className="text-2xl">No Captures Yet</EmptyTitle>
+                <EmptyDescription className="text-base">
+                  Set your NPSSO token to view your PlayStation captures.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button onClick={() => setDialogOpen(true)} size="lg">Set NPSSO Token</Button>
+              </EmptyContent>
+            </Empty>
+          </div>
+        )}
       </div>
     </div>
   );
