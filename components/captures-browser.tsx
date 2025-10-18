@@ -16,6 +16,13 @@ import {
 import type { Capture } from "@/lib/psn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { AlertCircleIcon, KeyRoundIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const fetcher = async ([url, token, tokenized]: [string, string, boolean]) => {
   const u = tokenized ? url : `${url}?tokenized=0`;
@@ -85,60 +92,53 @@ export function CapturesBrowser({ className }: { className?: string }) {
   }, [captures]);
 
   return (
-    <div className={cn("flex flex-col gap-8 min-h-dvh bg-black", className)}>
+    <div className={cn("flex flex-col gap-8 min-h-dvh", className)}>
       <header className="flex justify-end items-center pt-6 px-6">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-white text-black hover:bg-gray-100 font-semibold border-0 px-4 py-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-black border border-gray-700 max-w-md">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="rounded-2xl w-14 h-14">
+                  <KeyRoundIcon className="size-5" />
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Set PSN API Key</p>
+            </TooltipContent>
+          </Tooltip>
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="text-white">Enter PSN Token</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogTitle>Enter PSN Token</DialogTitle>
+              <DialogDescription>
                 Paste your Bearer access token from the PlayStation App
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-4">
+            <div className="flex w-full flex-col gap-4">
               <Input
                 id="psn-token"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Paste your Bearer access token"
-                className="font-mono text-sm bg-black border border-gray-700 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:border-gray-500"
                 type="password"
                 aria-label="PSN Bearer token"
               />
               {error?.message?.toLowerCase().includes("scope") ? (
-                <div className="text-xs border border-gray-700 bg-black p-3 text-gray-400">
-                  <strong className="text-gray-300">Invalid PSN scope:</strong>{" "}
-                  Generate a Bearer token from the PlayStation App and try
-                  again.
-                </div>
+                <Alert variant="destructive">
+                  <AlertCircleIcon />
+                  <AlertTitle>Invalid PSN scope</AlertTitle>
+                  <AlertDescription>
+                    Generate a Bearer token from the PlayStation App and try
+                    again.
+                  </AlertDescription>
+                </Alert>
               ) : error ? (
-                <div className="text-xs border border-gray-700 bg-black p-3 text-gray-400">
-                  {error.message}
-                </div>
+                <Alert variant="destructive">
+                  <AlertCircleIcon />
+                  <AlertDescription>{error.message}</AlertDescription>
+                </Alert>
               ) : null}
-              <Button
-                onClick={onUseToken}
-                className="bg-white text-black hover:bg-gray-100 font-semibold border-0 w-full"
-              >
-                Load Captures
-              </Button>
+              <Button onClick={onUseToken}>Save</Button>
             </div>
           </DialogContent>
         </Dialog>
