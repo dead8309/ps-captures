@@ -149,17 +149,17 @@ export function CapturesBrowser({ className }: { className?: string }) {
           <div className="space-y-8">
             {Array.from({ length: 2 }).map((_, i) => (
               <section key={i}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Skeleton className="w-16 h-16 rounded-[12px] bg-neutral-900" />
-                  <Skeleton className="h-10 w-48 bg-neutral-900" />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_, j) => (
-                    <Skeleton
-                      key={j}
-                      className="w-full aspect-video bg-neutral-900 border border-neutral-700"
-                    />
-                  ))}
+                 <div className="flex items-center gap-3 mb-4">
+                   <Skeleton className="w-16 h-16 rounded-[12px] bg-muted" />
+                   <Skeleton className="h-10 w-48 bg-muted" />
+                 </div>
+                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                   {Array.from({ length: 4 }).map((_, j) => (
+                     <Skeleton
+                       key={j}
+                       className="w-full aspect-video bg-muted border"
+                     />
+                   ))}
                 </div>
               </section>
             ))}
@@ -178,7 +178,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
                         className="size-16 rounded-[12px] object-cover"
                       />
                     )}
-                    <h3 className="text-2xl font-bold text-gray-200">{game}</h3>
+                     <h3 className="text-2xl font-bold text-foreground">{game}</h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {gameCaptures.map((c: Capture) => (
@@ -190,9 +190,9 @@ export function CapturesBrowser({ className }: { className?: string }) {
             })}
           </div>
         ) : token ? (
-          <div className="text-sm text-gray-500 text-center py-12">
-            No captures found.
-          </div>
+           <div className="text-sm text-muted-foreground text-center py-12">
+             No captures found.
+           </div>
         ) : null}
       </div>
     </div>

@@ -42,7 +42,7 @@ export function CaptureCard({
 
   return (
     <div
-      className={cn("group relative overflow-hidden border border-neutral-700 bg-black", className)}
+      className={cn("group relative overflow-hidden border bg-card", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -61,11 +61,11 @@ export function CaptureCard({
                   playsInline
                   onCanPlay={() => setVideoLoading(false)}
                 />
-                {videoLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
+                 {videoLoading && (
+                   <div className="absolute inset-0 flex items-center justify-center bg-card/50">
+                     <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                   </div>
+                 )}
               </>
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -79,7 +79,7 @@ export function CaptureCard({
           </div>
 
           {capture.type === 'video' && capture.duration && (
-            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/80 border border-neutral-600 px-2 py-1 text-neutral-300 text-xs font-semibold">
+            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-card/80 border px-2 py-1 text-muted-foreground text-xs font-semibold">
               <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -88,7 +88,7 @@ export function CaptureCard({
           )}
 
           {/* Dark overlay on hover */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-200" />
+          <div className="absolute inset-0 bg-transparent group-hover:bg-card/50 transition-colors duration-200" />
 
           <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <Button
@@ -101,7 +101,7 @@ export function CaptureCard({
           </div>
         </div>
       ) : (
-        <div className="w-full aspect-video bg-neutral-900 flex items-center justify-center text-xs text-neutral-600 border border-neutral-700">
+        <div className="w-full aspect-video bg-muted flex items-center justify-center text-xs text-muted-foreground border">
           No preview
         </div>
       )}
