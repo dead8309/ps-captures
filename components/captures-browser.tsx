@@ -23,22 +23,55 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
-const fetcher = async ([url, token, tokenized]: [string, string, boolean]) => {
+const fetcher = async ([
+  url,
+  accessToken,
+  refreshToken,
+  setAccessToken,
+  setRefreshToken,
+  tokenized,
+]: [
+  string,
+  string,
+  string,
+  (token: string) => void,
+  (token: string) => void,
+  boolean,
+]) => {
   const u = tokenized ? url : `${url}?tokenized=0`;
 
-  const trimmed = token.trim();
-  const authHeader = /^bearer\s+/i.test(trimmed)
-    ? trimmed
-    : `Bearer ${trimmed}`;
+  const authHeader = `Bearer ${accessToken}`;
 
-  const res = await fetch(u, { headers: { Authorization: authHeader } });
+  let res = await fetch(u, { headers: { Authorization: authHeader } });
+
+  if (res.status === 401 && refreshToken) {
+    try {
+      const refreshRes = await fetch("/api/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (refreshRes.ok) {
+        const { access_token, refresh_token } = await refreshRes.json();
+        setAccessToken(access_token);
+        if (refresh_token) setRefreshToken(refresh_token);
+        res = await fetch(u, {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
+      }
+    } catch (refreshError) {
+      console.error("Token refresh failed:", refreshError);
+    }
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}) as any);
     const msg =
       err?.error ||
       (res.status === 401
-        ? "Unauthorized. Check your token and try again."
+        ? "Unauthorized. Check your NPSSO and try again."
         : "Failed to fetch captures");
     throw new Error(msg);
   }
@@ -49,29 +82,61 @@ const fetcher = async ([url, token, tokenized]: [string, string, boolean]) => {
 };
 
 export function CapturesBrowser({ className }: { className?: string }) {
-  const [token, setToken] = useState("");
+  const [npsso, setNpsso] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [refreshToken, setRefreshToken] = useState("");
   const [input, setInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("psn_bearer") || "";
-    setToken(saved);
-    setInput(saved);
+    const savedNpsso = localStorage.getItem("psn_npsso") || "";
+    const savedAccess = localStorage.getItem("psn_access") || "";
+    const savedRefresh = localStorage.getItem("psn_refresh") || "";
+    setNpsso(savedNpsso);
+    setAccessToken(savedAccess);
+    setRefreshToken(savedRefresh);
+    setInput(savedNpsso);
   }, []);
+
   useEffect(() => {
-    if (token) localStorage.setItem("psn_bearer", token);
-  }, [token]);
+    localStorage.setItem("psn_npsso", npsso);
+    localStorage.setItem("psn_access", accessToken);
+    localStorage.setItem("psn_refresh", refreshToken);
+  }, [npsso, accessToken, refreshToken]);
 
   const { data, error, isLoading } = useSWR(
-    token ? ["/api/captures", token, true] : null,
+    accessToken
+      ? [
+          "/api/captures",
+          accessToken,
+          refreshToken,
+          setAccessToken,
+          setRefreshToken,
+          true,
+        ]
+      : null,
     fetcher,
     {
       revalidateOnFocus: false,
     },
   );
 
-  const onUseToken = () => {
-    setToken(input.trim());
+  const onUseToken = async () => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ npsso: trimmed }),
+    });
+    if (!res.ok) {
+      toast.error("Failed to authenticate. Please try again later.");
+    }
+    const { access_token, refresh_token } = await res.json();
+    setNpsso(trimmed);
+    setAccessToken(access_token);
+    setRefreshToken(refresh_token);
     setDialogOpen(false);
   };
 
@@ -104,24 +169,24 @@ export function CapturesBrowser({ className }: { className?: string }) {
               </DialogTrigger>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Set PSN API Key</p>
+              <p>Set NPSSO Token</p>
             </TooltipContent>
           </Tooltip>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Enter PSN Token</DialogTitle>
+              <DialogTitle>Enter NPSSO Token</DialogTitle>
               <DialogDescription>
-                Paste your Bearer access token from the PlayStation App
+                Paste your NPSSO token from the PlayStation App
               </DialogDescription>
             </DialogHeader>
             <div className="flex w-full flex-col gap-4">
               <Input
-                id="psn-token"
+                id="psn-npsso"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Paste your Bearer access token"
+                placeholder="Paste your NPSSO token"
                 type="password"
-                aria-label="PSN Bearer token"
+                aria-label="PSN NPSSO token"
               />
               {error?.message?.toLowerCase().includes("scope") ? (
                 <Alert variant="destructive">
@@ -149,17 +214,17 @@ export function CapturesBrowser({ className }: { className?: string }) {
           <div className="space-y-8">
             {Array.from({ length: 2 }).map((_, i) => (
               <section key={i}>
-                 <div className="flex items-center gap-3 mb-4">
-                   <Skeleton className="w-16 h-16 rounded-[12px] bg-muted" />
-                   <Skeleton className="h-10 w-48 bg-muted" />
-                 </div>
-                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                   {Array.from({ length: 4 }).map((_, j) => (
-                     <Skeleton
-                       key={j}
-                       className="w-full aspect-video bg-muted border"
-                     />
-                   ))}
+                <div className="flex items-center gap-3 mb-4">
+                  <Skeleton className="w-16 h-16 rounded-[12px] bg-muted" />
+                  <Skeleton className="h-10 w-48 bg-muted" />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <Skeleton
+                      key={j}
+                      className="w-full aspect-video bg-muted border"
+                    />
+                  ))}
                 </div>
               </section>
             ))}
@@ -178,7 +243,9 @@ export function CapturesBrowser({ className }: { className?: string }) {
                         className="size-16 rounded-[12px] object-cover"
                       />
                     )}
-                     <h3 className="text-2xl font-bold text-foreground">{game}</h3>
+                    <h3 className="text-2xl font-bold text-foreground">
+                      {game}
+                    </h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {gameCaptures.map((c: Capture) => (
@@ -189,10 +256,10 @@ export function CapturesBrowser({ className }: { className?: string }) {
               );
             })}
           </div>
-        ) : token ? (
-           <div className="text-sm text-muted-foreground text-center py-12">
-             No captures found.
-           </div>
+        ) : accessToken ? (
+          <div className="text-sm text-muted-foreground text-center py-12">
+            No captures found.
+          </div>
         ) : null}
       </div>
     </div>
