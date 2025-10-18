@@ -53,14 +53,16 @@ export function CapturesBrowser({ className }: { className?: string }) {
     },
   );
 
+
+
   const onUseToken = () => setToken(input.trim());
 
   const captures = data?.captures || [];
 
   const groupedCaptures = useMemo(() => {
-    if (!captures.length) return {};
+    if (!captures.length) return {} as Record<string, Capture[]>;
     return captures.reduce(
-      (acc, capture) => {
+      (acc: Record<string, Capture[]>, capture: Capture) => {
         const game = capture.game || "Unknown Game";
         if (!acc[game]) acc[game] = [];
         acc[game].push(capture);
@@ -126,7 +128,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
           </div>
         ) : Object.keys(groupedCaptures).length ? (
           <div className="space-y-8">
-            {Object.entries(groupedCaptures).map(([game, gameCaptures]) => {
+            {(Object.entries(groupedCaptures) as [string, Capture[]][]).map(([game, gameCaptures]) => {
               const titleImageUrl = gameCaptures[0]?.titleImageUrl;
               return (
                 <section key={game}>
@@ -143,7 +145,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
                     </h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {gameCaptures.map((c) => (
+                    {gameCaptures.map((c: Capture) => (
                       <CaptureCard key={c.id} capture={c} />
                     ))}
                   </div>

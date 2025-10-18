@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -12,6 +13,7 @@ export type Capture = {
   createdAt: string | null
   duration?: number | null
   titleImageUrl?: string | null
+  ugcType?: number | null
 }
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -28,24 +30,64 @@ export function CaptureCard({
   capture: Capture
   className?: string
 }) {
+  const [isHovered, setIsHovered] = useState(false)
+  const [videoLoading, setVideoLoading] = useState(false)
   const handleDownload = () => {
     if (!capture.downloadUrl) return
     const u = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`
     window.location.href = u
   }
 
+  const isVideo = capture.ugcType === 2
+
+  const handleMouseEnter = () => {
+    setIsHovered(true)
+    if (isVideo) {
+      setVideoLoading(true)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    setIsHovered(false)
+    setVideoLoading(false)
+  }
+
   return (
-    <div className={cn("group relative overflow-hidden border border-neutral-700 bg-black", className)}>
+    <div
+      className={cn("group relative overflow-hidden border border-neutral-700 bg-black", className)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {capture.preview ? (
         <div className="relative w-full">
-          <div className="aspect-video">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
-              alt={capture.title || "Capture"}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+          <div className="aspect-video relative">
+            {isVideo && isHovered ? (
+              <>
+                <video
+                  poster={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
+                  src={capture.downloadUrl ? `/api/download?url=${encodeURIComponent(capture.downloadUrl)}` : undefined}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                  onCanPlay={() => setVideoLoading(false)}
+                />
+                {videoLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
+                alt={capture.title || "Capture"}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
 
           {capture.duration && (

@@ -120,6 +120,7 @@ export async function GET(req: NextRequest) {
         createdAt: d.captureDate ?? d.creationTimestamp ?? null,
         duration: d.videoDuration ?? null,
         titleImageUrl: d.titleImageUrl ?? null,
+        ugcType: d.ugcType ?? null,
         titleImageUrl: d.titleImageUrl ?? null,
       }))
     : []
