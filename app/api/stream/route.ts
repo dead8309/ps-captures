@@ -1,20 +1,5 @@
 import type { NextRequest } from "next/server"
-
-export function parseCookies(cookieHeader: string | null) {
-  const map = new Map<string, string>()
-  if (!cookieHeader) return map
-  cookieHeader.split(";").forEach((part) => {
-    const [k, ...v] = part.trim().split("=")
-    if (k) map.set(k, v.join("="))
-  })
-  return map
-}
-
-export function isAllowedHost(url: URL) {
-  // Restrict to known media/CDN hosts to reduce abuse.
-  const host = url.hostname.toLowerCase()
-  return host.includes("cloudfront") || host.endsWith(".playstation.com") || host.includes("media.playstation.com")
-}
+import { isAllowedHost, parseCookies } from "../download/route"
 
 export async function GET(req: NextRequest) {
   const urlParam = req.nextUrl.searchParams.get("url")
@@ -43,7 +28,6 @@ export async function GET(req: NextRequest) {
     return new Response("Missing PSN CloudFront cookie (fetch captures first)", { status: 401 })
   }
 
-  // Stream file through our server with CloudFront cookies
   const upstream = await fetch(target.toString(), {
     headers: { Cookie: decodeURIComponent(cf) },
   })
@@ -52,17 +36,33 @@ export async function GET(req: NextRequest) {
     return new Response("Unable to fetch file", { status: 502 })
   }
 
-  // Try to preserve filename/type
+  // Handle M3U8 playlists by rewriting relative URLs
   const contentType = upstream.headers.get("content-type") ?? "application/octet-stream"
-  const disposition =
-    upstream.headers.get("content-disposition") ??
-    `attachment; filename="${encodeURIComponent(target.pathname.split("/").pop() || "capture")}"`
+  if (contentType.includes('mpegurl') || contentType.includes('m3u') || target.pathname.endsWith('.m3u8')) {
+    const text = await upstream.text();
+    const baseUrl = target.origin + target.pathname.replace(/\/[^\/]*$/, '/'); 
+    const rewritten = text.split('\n').map(line => {
+      line = line.trim();
+      if (line.startsWith('#') || line.startsWith('http') || !line) {
+        return line;
+      }
+      const absoluteUrl = baseUrl + line;
+      return `/api/stream?url=${encodeURIComponent(absoluteUrl)}`;
+    }).join('\n');
+
+    return new Response(rewritten, {
+      status: 200,
+      headers: {
+        "content-type": contentType,
+        "cache-control": "private, max-age=0, must-revalidate",
+      },
+    });
+  }
 
   return new Response(upstream.body, {
     status: 200,
     headers: {
       "content-type": contentType,
-      "content-disposition": disposition,
       "cache-control": "private, max-age=0, must-revalidate",
     },
   })

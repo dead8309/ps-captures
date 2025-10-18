@@ -138,6 +138,7 @@ export async function GET(req: NextRequest) {
             type: "video" as const,
             duration: d.videoDuration ?? null,
             downloadUrl: d.downloadUrl ?? null,
+            videoUrl: d.videoUrl ?? null,
             ugcType: 2,
           } as VideoCapture;
         } else {

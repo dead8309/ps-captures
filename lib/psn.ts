@@ -54,6 +54,7 @@ export type VideoCapture = BaseCapture & {
   type: "video";
   duration: number | null;
   downloadUrl: string | null;
+  videoUrl: string | null;
   ugcType: 2;
 };
 

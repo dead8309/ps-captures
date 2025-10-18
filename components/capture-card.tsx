@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Capture } from "@/lib/psn";
+import Hls from "hls.js";
 
 function formatDuration(seconds: number | null | undefined): string {
   if (!seconds) return "0:00";
@@ -20,6 +21,7 @@ export function CaptureCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [videoLoading, setVideoLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const handleDownload = () => {
     let u;
     switch (capture.type) {
@@ -48,6 +50,59 @@ export function CaptureCard({
     setVideoLoading(false);
   };
 
+  useEffect(() => {
+    if (!isVideo || !isHovered || !videoRef.current) return;
+
+    if (!capture.videoUrl) return;
+
+    const video = videoRef.current;
+    const url = `/api/stream?url=${encodeURIComponent(capture.videoUrl)}`;
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setVideoLoading(false);
+      });
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log("Network error, attempting to recover...");
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log("Media error, attempting to recover...");
+              hls.recoverMediaError();
+              break;
+            default:
+              console.error("Fatal HLS error, stopping playback");
+              setVideoLoading(false);
+              break;
+          }
+        }
+      });
+      return () => {
+        hls.destroy();
+      };
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari native HLS
+      video.src = url;
+      const onLoaded = () => setVideoLoading(false);
+      const onError = () => setVideoLoading(false);
+      video.addEventListener("loadedmetadata", onLoaded);
+      video.addEventListener("error", onError);
+      return () => {
+        video.removeEventListener("loadedmetadata", onLoaded);
+        video.removeEventListener("error", onError);
+      };
+    } else {
+      console.error("HLS not supported");
+      setVideoLoading(false);
+    }
+  }, [isHovered, isVideo]);
+
   return (
     <div
       className={cn("group relative overflow-hidden border bg-card", className)}
@@ -60,18 +115,13 @@ export function CaptureCard({
             {isVideo && isHovered ? (
               <>
                 <video
+                  ref={videoRef}
                   poster={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
-                  src={
-                    capture.type === "video"
-                      ? `/api/download?url=${encodeURIComponent(capture.downloadUrl!)}`
-                      : undefined
-                  }
                   className="w-full h-full object-cover"
                   muted
                   loop
                   autoPlay
                   playsInline
-                  onCanPlay={() => setVideoLoading(false)}
                 />
                 {videoLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-card/50">
