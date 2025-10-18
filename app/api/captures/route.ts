@@ -145,6 +145,7 @@ export async function GET(req: NextRequest) {
             ...base,
             type: "image" as const,
             ugcType: 1,
+            screenshotUrl: d.screenshotUrl,
           } as ImageCapture;
         }
       })

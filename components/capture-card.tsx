@@ -1,44 +1,52 @@
-"use client"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import type { Capture } from "@/lib/psn"
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { Capture } from "@/lib/psn";
 
 function formatDuration(seconds: number | null | undefined): string {
-  if (!seconds) return "0:00"
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${secs.toString().padStart(2, "0")}`
+  if (!seconds) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 export function CaptureCard({
   capture,
   className,
 }: {
-  capture: Capture
-  className?: string
+  capture: Capture;
+  className?: string;
 }) {
-  const [isHovered, setIsHovered] = useState(false)
-  const [videoLoading, setVideoLoading] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
   const handleDownload = () => {
-    if (capture.type !== 'video' || !capture.downloadUrl) return
-    const u = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`
-    window.location.href = u
-  }
+    let u;
+    switch (capture.type) {
+      case "video":
+        if (!capture.downloadUrl) return;
+        u = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`;
+        break;
+      case "image":
+        if (!capture.screenshotUrl) return;
+        u = `/api/download?url=${encodeURIComponent(capture.screenshotUrl)}`;
+    }
+    window.location.href = u;
+  };
 
-  const isVideo = capture.type === 'video'
+  const isVideo = capture.type === "video";
 
   const handleMouseEnter = () => {
-    setIsHovered(true)
+    setIsHovered(true);
     if (isVideo) {
-      setVideoLoading(true)
+      setVideoLoading(true);
     }
-  }
+  };
 
   const handleMouseLeave = () => {
-    setIsHovered(false)
-    setVideoLoading(false)
-  }
+    setIsHovered(false);
+    setVideoLoading(false);
+  };
 
   return (
     <div
@@ -53,7 +61,11 @@ export function CaptureCard({
               <>
                 <video
                   poster={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
-                  src={capture.type === 'video' ? `/api/download?url=${encodeURIComponent(capture.downloadUrl!)}` : undefined}
+                  src={
+                    capture.type === "video"
+                      ? `/api/download?url=${encodeURIComponent(capture.downloadUrl!)}`
+                      : undefined
+                  }
                   className="w-full h-full object-cover"
                   muted
                   loop
@@ -61,11 +73,11 @@ export function CaptureCard({
                   playsInline
                   onCanPlay={() => setVideoLoading(false)}
                 />
-                 {videoLoading && (
-                   <div className="absolute inset-0 flex items-center justify-center bg-card/50">
-                     <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                   </div>
-                 )}
+                {videoLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-card/50">
+                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </>
             ) : (
               /* eslint-disable-next-line @next/next/no-img-element */
@@ -78,7 +90,7 @@ export function CaptureCard({
             )}
           </div>
 
-          {capture.type === 'video' && capture.duration && (
+          {capture.type === "video" && capture.duration && (
             <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-card/80 border px-2 py-1 text-muted-foreground text-xs font-semibold">
               <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
@@ -106,5 +118,5 @@ export function CaptureCard({
         </div>
       )}
     </div>
-  )
+  );
 }

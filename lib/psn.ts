@@ -60,6 +60,7 @@ export type VideoCapture = BaseCapture & {
 export type ImageCapture = BaseCapture & {
   type: "image";
   ugcType: 1;
+  screenshotUrl: string | null;
 };
 
 export type Capture = VideoCapture | ImageCapture;
