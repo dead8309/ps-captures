@@ -62,9 +62,6 @@ export function CaptureCard({
       const hls = new Hls();
       hls.loadSource(url);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setVideoLoading(false);
-      });
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) {
           switch (data.type) {
@@ -83,19 +80,25 @@ export function CaptureCard({
           }
         }
       });
+
+      const onCanPlay = () => {
+        setVideoLoading(false);
+        video.removeEventListener('canplay', onCanPlay);
+      };
+      video.addEventListener('canplay', onCanPlay);
       return () => {
         hls.destroy();
       };
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari native HLS
       video.src = url;
-      const onLoaded = () => setVideoLoading(false);
+      const onCanPlay = () => setVideoLoading(false);
       const onError = () => setVideoLoading(false);
-      video.addEventListener("loadedmetadata", onLoaded);
-      video.addEventListener("error", onError);
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('error', onError);
       return () => {
-        video.removeEventListener("loadedmetadata", onLoaded);
-        video.removeEventListener("error", onError);
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('error', onError);
       };
     } else {
       console.error("HLS not supported");
