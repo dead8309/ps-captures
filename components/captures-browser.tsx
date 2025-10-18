@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo } from "react";
 import useSWR from "swr";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { type Capture, CaptureCard } from "./capture-card";
+import { CaptureCard } from "./capture-card"
+import type { Capture } from "@/lib/psn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 

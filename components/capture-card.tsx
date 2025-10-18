@@ -2,19 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-export type Capture = {
-  id: string
-  title: string
-  game: string | null
-  fileType: string | null
-  preview: string | null
-  downloadUrl: string | null
-  createdAt: string | null
-  duration?: number | null
-  titleImageUrl?: string | null
-  ugcType?: number | null
-}
+import type { Capture } from "@/lib/psn"
 
 function formatDuration(seconds: number | null | undefined): string {
   if (!seconds) return "0:00"
@@ -33,12 +21,12 @@ export function CaptureCard({
   const [isHovered, setIsHovered] = useState(false)
   const [videoLoading, setVideoLoading] = useState(false)
   const handleDownload = () => {
-    if (!capture.downloadUrl) return
+    if (capture.type !== 'video' || !capture.downloadUrl) return
     const u = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`
     window.location.href = u
   }
 
-  const isVideo = capture.ugcType === 2
+  const isVideo = capture.type === 'video'
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -65,7 +53,7 @@ export function CaptureCard({
               <>
                 <video
                   poster={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
-                  src={capture.downloadUrl ? `/api/download?url=${encodeURIComponent(capture.downloadUrl)}` : undefined}
+                  src={capture.type === 'video' ? `/api/download?url=${encodeURIComponent(capture.downloadUrl!)}` : undefined}
                   className="w-full h-full object-cover"
                   muted
                   loop
@@ -90,7 +78,7 @@ export function CaptureCard({
             )}
           </div>
 
-          {capture.duration && (
+          {capture.type === 'video' && capture.duration && (
             <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/80 border border-neutral-600 px-2 py-1 text-neutral-300 text-xs font-semibold">
               <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
