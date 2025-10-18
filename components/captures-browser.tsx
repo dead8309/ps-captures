@@ -4,7 +4,15 @@ import { useEffect, useState, useMemo } from "react";
 import useSWR from "swr";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CaptureCard } from "./capture-card"
+import { CaptureCard } from "./capture-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { Capture } from "@/lib/psn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -36,6 +44,7 @@ const fetcher = async ([url, token, tokenized]: [string, string, boolean]) => {
 export function CapturesBrowser({ className }: { className?: string }) {
   const [token, setToken] = useState("");
   const [input, setInput] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("psn_bearer") || "";
@@ -54,14 +63,16 @@ export function CapturesBrowser({ className }: { className?: string }) {
     },
   );
 
-
-
-  const onUseToken = () => setToken(input.trim());
+  const onUseToken = () => {
+    setToken(input.trim());
+    setDialogOpen(false);
+  };
 
   const captures = data?.captures || [];
 
-  const groupedCaptures = useMemo(() => {
-    if (!captures.length) return {} as Record<string, Capture[]>;
+  const groupedCaptures: Record<string, Capture[]> = useMemo(() => {
+    const result: Record<string, Capture[]> = {};
+    if (!captures.length) return result;
     return captures.reduce(
       (acc: Record<string, Capture[]>, capture: Capture) => {
         const game = capture.game || "Unknown Game";
@@ -69,43 +80,69 @@ export function CapturesBrowser({ className }: { className?: string }) {
         acc[game].push(capture);
         return acc;
       },
-      {} as Record<string, Capture[]>,
+      result,
     );
   }, [captures]);
 
   return (
     <div className={cn("flex flex-col gap-8 min-h-dvh bg-black", className)}>
-      <section className="flex flex-col gap-6 items-center justify-center pt-16 px-6">
-        <div className="flex flex-col gap-4 w-full max-w-2xl">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Input
-              id="psn-token"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Paste your Bearer access token"
-              className="font-mono text-sm bg-black border border-neutral-700 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:border-neutral-500"
-              type="password"
-              aria-label="PSN Bearer token"
-            />
-            <Button
-              onClick={onUseToken}
-              className="bg-white text-black hover:bg-gray-100 font-semibold whitespace-nowrap border-0 px-8"
-            >
-              Load
+      <header className="flex justify-end items-center pt-6 px-6">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-white text-black hover:bg-gray-100 font-semibold border-0 px-4 py-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
             </Button>
-          </div>
-          {error?.message?.toLowerCase().includes("scope") ? (
-            <div className="text-xs border border-gray-700 bg-black p-3 text-gray-400 w-full">
-              <strong className="text-gray-300">Invalid PSN scope:</strong>{" "}
-              Generate a Bearer token from the PlayStation App and try again.
+          </DialogTrigger>
+          <DialogContent className="bg-black border border-gray-700 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-white">Enter PSN Token</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Paste your Bearer access token from the PlayStation App
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <Input
+                id="psn-token"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Paste your Bearer access token"
+                className="font-mono text-sm bg-black border border-gray-700 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:border-gray-500"
+                type="password"
+                aria-label="PSN Bearer token"
+              />
+              {error?.message?.toLowerCase().includes("scope") ? (
+                <div className="text-xs border border-gray-700 bg-black p-3 text-gray-400">
+                  <strong className="text-gray-300">Invalid PSN scope:</strong>{" "}
+                  Generate a Bearer token from the PlayStation App and try
+                  again.
+                </div>
+              ) : error ? (
+                <div className="text-xs border border-gray-700 bg-black p-3 text-gray-400">
+                  {error.message}
+                </div>
+              ) : null}
+              <Button
+                onClick={onUseToken}
+                className="bg-white text-black hover:bg-gray-100 font-semibold border-0 w-full"
+              >
+                Load Captures
+              </Button>
             </div>
-          ) : error ? (
-            <div className="text-xs border border-gray-700 bg-black p-3 text-gray-400 w-full">
-              {error.message}
-            </div>
-          ) : null}
-        </div>
-      </section>
+          </DialogContent>
+        </Dialog>
+      </header>
 
       <div className="flex-1 px-6 pb-12">
         {isLoading ? (
@@ -129,7 +166,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
           </div>
         ) : Object.keys(groupedCaptures).length ? (
           <div className="space-y-8">
-            {(Object.entries(groupedCaptures) as [string, Capture[]][]).map(([game, gameCaptures]) => {
+            {Object.entries(groupedCaptures).map(([game, gameCaptures]) => {
               const titleImageUrl = gameCaptures[0]?.titleImageUrl;
               return (
                 <section key={game}>
@@ -141,9 +178,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
                         className="size-16 rounded-[12px] object-cover"
                       />
                     )}
-                    <h3 className="text-2xl font-bold text-gray-200">
-                      {game}
-                    </h3>
+                    <h3 className="text-2xl font-bold text-gray-200">{game}</h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {gameCaptures.map((c: Capture) => (
