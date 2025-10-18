@@ -80,7 +80,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Paste your Bearer access token"
-              className="font-mono text-sm bg-black border border-gray-700 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:border-gray-500"
+              className="font-mono text-sm bg-black border border-neutral-700 text-gray-300 placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:border-neutral-500"
               type="password"
               aria-label="PSN Bearer token"
             />
@@ -106,12 +106,22 @@ export function CapturesBrowser({ className }: { className?: string }) {
 
       <div className="flex-1 px-6 pb-12">
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                className="w-full aspect-video bg-gray-900 border border-gray-700"
-              />
+          <div className="space-y-8">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <section key={i}>
+                <div className="flex items-center gap-3 mb-4">
+                  <Skeleton className="w-16 h-16 rounded-[12px] bg-neutral-900" />
+                  <Skeleton className="h-10 w-48 bg-neutral-900" />
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <Skeleton
+                      key={j}
+                      className="w-full aspect-video bg-neutral-900 border border-neutral-700"
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         ) : Object.keys(groupedCaptures).length ? (

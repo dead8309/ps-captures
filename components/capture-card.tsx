@@ -35,7 +35,7 @@ export function CaptureCard({
   }
 
   return (
-    <div className={cn("group relative overflow-hidden border border-gray-700 bg-black", className)}>
+    <div className={cn("group relative overflow-hidden border border-neutral-700 bg-black", className)}>
       {capture.preview ? (
         <div className="relative w-full">
           <div className="aspect-video">
@@ -49,7 +49,7 @@ export function CaptureCard({
           </div>
 
           {capture.duration && (
-            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/80 border border-gray-600 px-2 py-1 text-gray-300 text-xs font-semibold">
+            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-black/80 border border-neutral-600 px-2 py-1 text-neutral-300 text-xs font-semibold">
               <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -64,14 +64,14 @@ export function CaptureCard({
             <Button
               size="sm"
               onClick={handleDownload}
-              className="bg-white text-black hover:bg-gray-100 text-xs font-semibold border-0"
+              className="bg-white text-black hover:bg-gray-100 text-xs font-semibold border-0 cursor-pointer"
             >
               Download
             </Button>
           </div>
         </div>
       ) : (
-        <div className="w-full aspect-video bg-gray-900 flex items-center justify-center text-xs text-gray-600 border border-gray-700">
+        <div className="w-full aspect-video bg-neutral-900 flex items-center justify-center text-xs text-neutral-600 border border-neutral-700">
           No preview
         </div>
       )}
