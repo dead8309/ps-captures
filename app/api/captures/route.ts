@@ -118,6 +118,9 @@ export async function GET(req: NextRequest) {
         preview: d.largePreviewImage ?? d.thumbnailUrl ?? null,
         downloadUrl: d.downloadUrl ?? null,
         createdAt: d.captureDate ?? d.creationTimestamp ?? null,
+        duration: d.videoDuration ?? null,
+        titleImageUrl: d.titleImageUrl ?? null,
+        titleImageUrl: d.titleImageUrl ?? null,
       }))
     : []
 
