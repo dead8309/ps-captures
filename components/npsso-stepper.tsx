@@ -92,10 +92,10 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                     {step.id === "step-3" && (
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">
-                          You'll see a JSON response. Copy the value of the "npsso" field.
+                        You&apos;ll see a JSON response. Copy the value of the &quot;npsso&quot; field.
                         </p>
                         <code className="text-sm bg-muted px-2 py-1 rounded font-mono text-muted-foreground block">
-                          {"{ \"npsso\": \"your_token_here\" }"}
+                          {"{ &quot;npsso&quot;: &quot;your_token_here&quot; }"}
                         </code>
                       </div>
                     )}
