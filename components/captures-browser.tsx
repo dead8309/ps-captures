@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import useSWR from "swr";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CaptureCard } from "./capture-card";
@@ -33,123 +32,69 @@ import {
 } from "@/components/ui/empty";
 import { NpssoStepper } from "@/components/npsso-stepper";
 import { toast } from "sonner";
+import { useAtom, useAtomValue, useAtomSet, Result } from "@effect-atom/atom-react";
+import {
+  npssoAtom,
+  accessTokenAtom,
+  refreshTokenAtom,
+  authAtom,
+  capturesAtom,
+} from "@/lib/atoms";
 
-const fetcher = async ([
-  url,
-  accessToken,
-  refreshToken,
-  setAccessToken,
-  setRefreshToken,
-  tokenized,
-]: [
-  string,
-  string,
-  string,
-  (token: string) => void,
-  (token: string) => void,
-  boolean,
-]) => {
-  const u = tokenized ? url : `${url}?tokenized=0`;
 
-  const authHeader = `Bearer ${accessToken}`;
-
-  let res = await fetch(u, { headers: { Authorization: authHeader } });
-
-  if (res.status === 401 && refreshToken) {
-    try {
-      const refreshRes = await fetch("/api/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      if (refreshRes.ok) {
-        const { access_token, refresh_token } = await refreshRes.json();
-        setAccessToken(access_token);
-        if (refresh_token) setRefreshToken(refresh_token);
-        res = await fetch(u, {
-          headers: { Authorization: `Bearer ${access_token}` },
-        });
-      }
-    } catch (refreshError) {
-      console.error("Token refresh failed:", refreshError);
-    }
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}) as any);
-    const msg =
-      err?.error ||
-      (res.status === 401
-        ? "Unauthorized. Check your NPSSO and try again."
-        : "Failed to fetch captures");
-    throw new Error(msg);
-  }
-  const tokenizedSupportedHeader = res.headers.get("x-psn-tokenized-supported");
-  const tokenizedSupported = tokenizedSupportedHeader !== "false";
-  const json = (await res.json()) as { captures: Capture[] };
-  return Object.assign(json, { tokenizedSupported });
-};
 
 export function CapturesBrowser({ className }: { className?: string }) {
-  const [npsso, setNpsso] = useState("");
-  const [accessToken, setAccessToken] = useState("");
-  const [refreshToken, setRefreshToken] = useState("");
+  const [npsso, setNpsso] = useAtom(npssoAtom);
+  const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
+  const [, setRefreshToken] = useAtom(refreshTokenAtom);
   const [input, setInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const savedNpsso = localStorage.getItem("psn_npsso") || "";
-    const savedAccess = localStorage.getItem("psn_access") || "";
-    const savedRefresh = localStorage.getItem("psn_refresh") || "";
-    setNpsso(savedNpsso);
-    setAccessToken(savedAccess);
-    setRefreshToken(savedRefresh);
-    setInput(savedNpsso);
-  }, []);
+  const capturesResult = useAtomValue(capturesAtom);
+  const authSet = useAtomSet(authAtom);
+  const authResult = useAtomValue(authAtom);
 
   useEffect(() => {
-    localStorage.setItem("psn_npsso", npsso);
-    localStorage.setItem("psn_access", accessToken);
-    localStorage.setItem("psn_refresh", refreshToken);
-  }, [npsso, accessToken, refreshToken]);
+    setInput(npsso);
+  }, [npsso]);
 
-  const { data, error, isLoading } = useSWR(
-    accessToken
-      ? [
-          "/api/captures",
-          accessToken,
-          refreshToken,
-          setAccessToken,
-          setRefreshToken,
-          true,
-        ]
-      : null,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-    },
-  );
-
-  const onUseToken = async () => {
+  const onUseToken = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
 
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ npsso: trimmed }),
-    });
-    if (!res.ok) {
-      toast.error("Failed to authenticate. Please try again later.");
-    }
-    const { access_token, refresh_token } = await res.json();
-    setNpsso(trimmed);
-    setAccessToken(access_token);
-    setRefreshToken(refresh_token);
-    setDialogOpen(false);
+    authSet({ payload: { npsso: trimmed } });
   };
 
-  const captures = data?.captures || [];
+  useEffect(() => {
+    Result.match(authResult, {
+      onInitial: () => {},
+      onSuccess: (success) => {
+        setNpsso(input.trim());
+        setAccessToken(success.value.access_token);
+        setRefreshToken(success.value.refresh_token);
+        setDialogOpen(false);
+      },
+      onFailure: () => {
+        toast.error("Failed to authenticate. Please try again later.");
+      },
+    });
+  }, [authResult, input, setNpsso, setAccessToken, setRefreshToken, setDialogOpen]);
+
+  const capturesData = Result.match(capturesResult, {
+    onInitial: () => ({ captures: [] as Capture[], tokenizedSupported: false }),
+    onFailure: () => ({ captures: [] as Capture[], tokenizedSupported: false }),
+    onSuccess: (success) => success.value,
+  });
+
+  const error = Result.match(capturesResult, {
+    onInitial: () => null,
+    onFailure: () => new Error("Failed to fetch captures"),
+    onSuccess: () => null,
+  });
+
+  const isLoading = Result.isInitial(capturesResult);
+
+  const captures = capturesData.captures;
 
   const groupedCaptures: Record<string, Capture[]> = useMemo(() => {
     const result: Record<string, Capture[]> = {};
@@ -284,26 +229,9 @@ export function CapturesBrowser({ className }: { className?: string }) {
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent className="min-w-lg">
-                <NpssoStepper onEnterToken={async (token) => {
+                <NpssoStepper onEnterToken={(token) => {
                   if (token.trim()) {
-                    try {
-                      const res = await fetch("/api/auth", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ npsso: token.trim() }),
-                      });
-                      if (res.ok) {
-                        const { access_token, refresh_token } = await res.json();
-                        setAccessToken(access_token);
-                        setRefreshToken(refresh_token);
-                        setNpsso(token.trim());
-                      } else {
-                        // Handle error, maybe show toast
-                        console.error("Auth failed");
-                      }
-                    } catch (error) {
-                      console.error("Auth error:", error);
-                    }
+                    authSet({ payload: { npsso: token.trim() } });
                   }
                 }} />
               </EmptyContent>

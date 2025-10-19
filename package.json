@@ -10,6 +10,10 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@effect-atom/atom-react": "^0.3.3",
+    "@effect/experimental": "^0.56.0",
+    "@effect/platform": "^0.92.1",
+    "@effect/platform-browser": "^0.72.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
