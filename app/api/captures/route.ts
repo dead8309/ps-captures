@@ -28,7 +28,6 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const requestedTokenized = req.nextUrl.searchParams.get("tokenized") !== "0";
   const makeUrl = (tokenized: boolean) =>
     `${PSN_BASE_URL}?includeTokenizedUrls=${tokenized ? "true" : "false"}&limit=100`;
 
@@ -48,15 +47,14 @@ export async function GET(req: NextRequest) {
     return { ok: true as const, res, body: "" };
   };
 
-  // First attempt
-  let attempt = await tryFetch(requestedTokenized);
+  // Try tokenized URLs first for better performance
+  let attempt = await tryFetch(true);
 
   // If scope error with tokenized, try without tokenized to still list items
   if (
     !attempt.ok &&
     attempt.res.status === 403 &&
-    /Invalid PSN scope/i.test(attempt.body || "") &&
-    requestedTokenized
+    /Invalid PSN scope/i.test(attempt.body || "")
   ) {
     const retry = await tryFetch(false);
     if (retry.ok) {
@@ -116,11 +114,6 @@ export async function GET(req: NextRequest) {
       ].join("; "),
     );
   }
-  const finalUsedTokenized = /\bincludeTokenizedUrls=true\b/.test(upstream.url);
-  headers.set(
-    "x-psn-tokenized-supported",
-    finalUsedTokenized ? "true" : "false",
-  );
 
   const captures: Capture[] = Array.isArray(data?.ugcDocument)
     ? data.ugcDocument.map((d: RawCapture) => {

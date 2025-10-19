@@ -45,7 +45,6 @@ export const AuthResponse = Schema.Struct({
 
 export const CapturesResponse = Schema.Struct({
   captures: Schema.Array(CaptureSchema),
-  tokenizedSupported: Schema.Boolean,
 });
 
 // Error schemas with discriminated unions

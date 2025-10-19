@@ -1,6 +1,7 @@
 "use client";
 
 import { Result, useAtomValue } from "@effect-atom/atom-react";
+import { Cause } from "effect";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { accessTokenAtom, capturesAtom } from "@/lib/atoms";
@@ -15,26 +16,7 @@ export function CapturesBrowser() {
 
   useEffect(() => setMounted(true), []);
 
-  const capturesData = Result.match(capturesResult, {
-    onInitial: () => ({ captures: [], tokenizedSupported: false }),
-    onFailure: () => ({ captures: [], tokenizedSupported: false }),
-    onSuccess: (success) => success.value,
-  });
-
-  const error = Result.match(capturesResult, {
-    onInitial: () => null,
-    onFailure: (failure) => failure.cause,
-    onSuccess: () => null,
-  });
-
   const isLoading = Result.isInitial(capturesResult);
-  const captures = Array.from(capturesData.captures);
-
-  useEffect(() => {
-    if (error) {
-      toast.error("Failed to fetch captures");
-    }
-  }, [error]);
 
   if (!mounted || isLoading) {
     return <CapturesSkeleton />;
@@ -44,5 +26,14 @@ export function CapturesBrowser() {
     return <Onboarding />;
   }
 
-  return <CapturesGallery captures={captures} />;
+  return Result.match(capturesResult, {
+    onInitial: () => <CapturesSkeleton />,
+    onFailure: (failure) => {
+      toast.error(Cause.pretty(failure.cause));
+      return <CapturesGallery captures={[]} />;
+    },
+    onSuccess: (success) => (
+      <CapturesGallery captures={Array.from(success.value.captures)} />
+    ),
+  });
 }

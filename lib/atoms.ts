@@ -49,7 +49,7 @@ export const capturesAtom = runtime.atom(
   Effect.fnUntraced(function* (get: Atom.Context) {
     const token = get(accessTokenAtom);
     if (!token) {
-      return { captures: [], tokenizedSupported: false };
+      return { captures: [] };
     }
 
     const refreshToken = get(refreshTokenAtom);
