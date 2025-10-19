@@ -31,6 +31,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { NpssoStepper } from "@/components/npsso-stepper";
 import { toast } from "sonner";
 
 const fetcher = async ([
@@ -270,18 +271,41 @@ export function CapturesBrowser({ className }: { className?: string }) {
           </div>
         ) : (
           <div className="flex justify-center">
-            <Empty className="border md:p-6 max-w-md flex-none">
+            <Empty className="border md:p-6 flex-none from-muted/50 to-background h-full bg-gradient-to-b from-30%">
               <EmptyHeader>
                 <EmptyMedia variant="icon" className="size-12">
                   <Gamepad2 />
                 </EmptyMedia>
                 <EmptyTitle className="text-2xl">No Captures Yet</EmptyTitle>
                 <EmptyDescription className="text-base">
-                  Set your NPSSO token to view your PlayStation captures.
+                  To get started, paste your NPSSO token from the PlayStation
+                  mobile app. This allows us to access your game captures
+                  securely.
                 </EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>
-                <Button onClick={() => setDialogOpen(true)} size="lg">Set NPSSO Token</Button>
+              <EmptyContent className="min-w-lg">
+                <NpssoStepper onEnterToken={async (token) => {
+                  if (token.trim()) {
+                    try {
+                      const res = await fetch("/api/auth", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ npsso: token.trim() }),
+                      });
+                      if (res.ok) {
+                        const { access_token, refresh_token } = await res.json();
+                        setAccessToken(access_token);
+                        setRefreshToken(refresh_token);
+                        setNpsso(token.trim());
+                      } else {
+                        // Handle error, maybe show toast
+                        console.error("Auth failed");
+                      }
+                    } catch (error) {
+                      console.error("Auth error:", error);
+                    }
+                  }
+                }} />
               </EmptyContent>
             </Empty>
           </div>
