@@ -1,39 +1,39 @@
 import * as FetchHttpClient from "@effect/platform/FetchHttpClient";
 import { BrowserKeyValueStore } from "@effect/platform-browser";
 import { Atom, AtomHttpApi } from "@effect-atom/atom-react";
-import { Effect, Schema } from "effect";
+import { Cause, Effect, Layer, Schema } from "effect";
 import { PsnApi } from "./api";
-
-export const storageRuntime = Atom.runtime(
-  BrowserKeyValueStore.layerLocalStorage,
-);
-
-export const npssoAtom = Atom.kvs({
-  runtime: storageRuntime,
-  key: "psn_npsso",
-  schema: Schema.String,
-  defaultValue: () => "",
-});
-
-export const accessTokenAtom = Atom.kvs({
-  runtime: storageRuntime,
-  key: "psn_access",
-  schema: Schema.String,
-  defaultValue: () => "",
-});
-
-export const refreshTokenAtom = Atom.kvs({
-  runtime: storageRuntime,
-  key: "psn_refresh",
-  schema: Schema.String,
-  defaultValue: () => "",
-});
 
 export class PsnClient extends AtomHttpApi.Tag<PsnClient>()("PsnClient", {
   api: PsnApi,
   httpClient: FetchHttpClient.layer,
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "",
 }) {}
+
+const runtime = Atom.runtime(
+  Layer.mergeAll(BrowserKeyValueStore.layerLocalStorage, PsnClient.layer),
+);
+
+export const npssoAtom = Atom.kvs({
+  runtime: runtime,
+  key: "psn_npsso",
+  schema: Schema.String,
+  defaultValue: () => "",
+});
+
+export const accessTokenAtom = Atom.kvs({
+  runtime: runtime,
+  key: "psn_access",
+  schema: Schema.String,
+  defaultValue: () => "",
+});
+
+export const refreshTokenAtom = Atom.kvs({
+  runtime: runtime,
+  key: "psn_refresh",
+  schema: Schema.String,
+  defaultValue: () => "",
+});
 
 export const authAtom = PsnClient.mutation("auth", "authenticate");
 
@@ -45,7 +45,7 @@ export const refreshTokenFn = (refreshToken: string) =>
       .pipe(Effect.catchAll((error) => Effect.fail(Cause.fail(error))));
   });
 
-export const capturesAtom = Atom.make(
+export const capturesAtom = runtime.atom(
   Effect.fnUntraced(function* (get: Atom.Context) {
     const token = get(accessTokenAtom);
     if (!token) {
