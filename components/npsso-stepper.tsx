@@ -38,6 +38,8 @@ interface NpssoStepperProps {
   onEnterToken: (token: string) => void;
 }
 
+const npssoJson = '{ "npsso": "your_token_here" }';
+
 export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
   const [token, setToken] = React.useState("");
   return (
@@ -98,7 +100,7 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                           &quot;npsso&quot; field.
                         </p>
                         <code className="text-sm bg-muted px-2 py-1 rounded font-mono text-muted-foreground block">
-                          {"{ &quot;npsso&quot;: &quot;your_token_here&quot; }"}
+                          {npssoJson}
                         </code>
                       </div>
                     )}
