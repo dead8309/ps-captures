@@ -4,7 +4,7 @@ import { PlayIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Capture } from "@/lib/psn";
+import type { VideoCapture } from "@/lib/psn";
 import { cn } from "@/lib/utils";
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -14,48 +14,25 @@ function formatDuration(seconds: number | null | undefined): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function CaptureCard({
+export function VideoCaptureCard({
   capture,
   className,
 }: {
-  capture: Capture;
+  capture: VideoCapture;
   className?: string;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [videoLoading, setVideoLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
   const handleDownload = () => {
-    let u: string;
-    switch (capture.type) {
-      case "video":
-        if (!capture.downloadUrl) return;
-        u = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`;
-        break;
-      case "image":
-        if (!capture.screenshotUrl) return;
-        u = `/api/download?url=${encodeURIComponent(capture.screenshotUrl)}`;
-    }
-    window.location.href = u;
-  };
-
-  const isVideo = capture.type === "video";
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-    if (isVideo) {
-      setVideoLoading(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setVideoLoading(false);
+    if (!capture.downloadUrl) return;
+    const url = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`;
+    window.location.href = url;
   };
 
   useEffect(() => {
-    if (!isVideo || !isHovered || !videoRef.current) return;
-
-    if (!capture.videoUrl) return;
+    if (!isHovered || !videoRef.current || !capture.videoUrl) return;
 
     const video = videoRef.current;
     const url = `/api/stream?url=${encodeURIComponent(capture.videoUrl)}`;
@@ -92,7 +69,6 @@ export function CaptureCard({
         hls.destroy();
       };
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS
       video.src = url;
       const onCanPlay = () => setVideoLoading(false);
       const onError = () => setVideoLoading(false);
@@ -106,7 +82,17 @@ export function CaptureCard({
       console.error("HLS not supported");
       setVideoLoading(false);
     }
-  }, [isHovered, isVideo, capture.videoUrl]);
+  }, [isHovered, capture.videoUrl]);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    setVideoLoading(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setVideoLoading(false);
+  };
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: Card hover interaction for video preview
@@ -118,7 +104,7 @@ export function CaptureCard({
       {capture.preview ? (
         <div className="relative w-full">
           <div className="aspect-video relative">
-            {isVideo && isHovered ? (
+            {isHovered ? (
               <>
                 <video
                   ref={videoRef}
@@ -131,7 +117,7 @@ export function CaptureCard({
                 />
                 {videoLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-card/50">
-                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   </div>
                 )}
               </>
@@ -146,7 +132,7 @@ export function CaptureCard({
             )}
           </div>
 
-          {capture.type === "video" && capture.duration && (
+          {capture.duration && (
             <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-card/80 border px-2 py-1 text-muted-foreground text-xs font-semibold">
               <PlayIcon className="w-3 h-3" />
               <span>{formatDuration(capture.duration)}</span>

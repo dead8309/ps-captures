@@ -45,8 +45,9 @@ import {
 } from "@/lib/atoms";
 import type { Capture } from "@/lib/psn";
 import { cn } from "@/lib/utils";
-import { CaptureCard } from "./capture-card";
 import { GameSkeleton } from "./game-skeleton";
+import { ImageCaptureCard } from "./image-capture";
+import { VideoCaptureCard } from "./video-capture";
 
 export function CapturesBrowser({ className }: { className?: string }) {
   const [npsso, setNpsso] = useAtom(npssoAtom);
@@ -86,8 +87,8 @@ export function CapturesBrowser({ className }: { className?: string }) {
   }, [authResult, input, setNpsso, setAccessToken, setRefreshToken]);
 
   const capturesData = Result.match(capturesResult, {
-    onInitial: () => ({ captures: [] as Capture[], tokenizedSupported: false }),
-    onFailure: () => ({ captures: [] as Capture[], tokenizedSupported: false }),
+    onInitial: () => ({ captures: [], tokenizedSupported: false }),
+    onFailure: () => ({ captures: [], tokenizedSupported: false }),
     onSuccess: (success) => success.value,
   });
 
@@ -99,20 +100,16 @@ export function CapturesBrowser({ className }: { className?: string }) {
 
   const isLoading = Result.isInitial(capturesResult);
 
-  const captures = capturesData.captures;
+  const captures = Array.from(capturesData.captures);
 
-  const groupedCaptures: Record<string, Capture[]> = useMemo(() => {
-    const result: Record<string, Capture[]> = {};
-    if (!captures.length) return result;
-    return captures.reduce(
-      (acc: Record<string, Capture[]>, capture: Capture) => {
-        const game = capture.game || "Unknown Game";
-        if (!acc[game]) acc[game] = [];
-        acc[game].push(capture);
-        return acc;
-      },
-      result,
-    );
+  const groupedCaptures = useMemo(() => {
+    if (!captures.length) return {};
+    return captures.reduce((acc: Record<string, Capture[]>, capture) => {
+      const game = capture.game || "Unknown Game";
+      if (!acc[game]) acc[game] = [];
+      acc[game].push(capture);
+      return acc;
+    }, {});
   }, [captures]);
 
   return (
@@ -196,9 +193,13 @@ export function CapturesBrowser({ className }: { className?: string }) {
                     </h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {gameCaptures.map((c: Capture) => (
-                      <CaptureCard key={c.id} capture={c} />
-                    ))}
+                    {gameCaptures.map((c: Capture) =>
+                      c.type === "video" ? (
+                        <VideoCaptureCard key={c.id} capture={c} />
+                      ) : (
+                        <ImageCaptureCard key={c.id} capture={c} />
+                      ),
+                    )}
                   </div>
                 </section>
               );
