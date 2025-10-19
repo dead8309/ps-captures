@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const TOKEN_URL = "https://ca.account.sony.com/api/authz/v3/oauth/token";
 

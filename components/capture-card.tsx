@@ -1,9 +1,11 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { Capture } from "@/lib/psn";
 import Hls from "hls.js";
+import { PlayIcon } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import type { Capture } from "@/lib/psn";
+import { cn } from "@/lib/utils";
 
 function formatDuration(seconds: number | null | undefined): string {
   if (!seconds) return "0:00";
@@ -23,7 +25,7 @@ export function CaptureCard({
   const [videoLoading, setVideoLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const handleDownload = () => {
-    let u;
+    let u: string;
     switch (capture.type) {
       case "video":
         if (!capture.downloadUrl) return;
@@ -83,9 +85,9 @@ export function CaptureCard({
 
       const onCanPlay = () => {
         setVideoLoading(false);
-        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener("canplay", onCanPlay);
       };
-      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener("canplay", onCanPlay);
       return () => {
         hls.destroy();
       };
@@ -94,19 +96,20 @@ export function CaptureCard({
       video.src = url;
       const onCanPlay = () => setVideoLoading(false);
       const onError = () => setVideoLoading(false);
-      video.addEventListener('canplay', onCanPlay);
-      video.addEventListener('error', onError);
+      video.addEventListener("canplay", onCanPlay);
+      video.addEventListener("error", onError);
       return () => {
-        video.removeEventListener('canplay', onCanPlay);
-        video.removeEventListener('error', onError);
+        video.removeEventListener("canplay", onCanPlay);
+        video.removeEventListener("error", onError);
       };
     } else {
       console.error("HLS not supported");
       setVideoLoading(false);
     }
-  }, [isHovered, isVideo]);
+  }, [isHovered, isVideo, capture.videoUrl]);
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Card hover interaction for video preview
     <div
       className={cn("group relative overflow-hidden border bg-card", className)}
       onMouseEnter={handleMouseEnter}
@@ -133,11 +136,11 @@ export function CaptureCard({
                 )}
               </>
             ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
+              <Image
+                fill
+                style={{ objectFit: "cover" }}
                 src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
                 alt={capture.title || "Capture"}
-                className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             )}
@@ -145,9 +148,7 @@ export function CaptureCard({
 
           {capture.type === "video" && capture.duration && (
             <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-card/80 border px-2 py-1 text-muted-foreground text-xs font-semibold">
-              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <PlayIcon className="w-3 h-3" />
               <span>{formatDuration(capture.duration)}</span>
             </div>
           )}

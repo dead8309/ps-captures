@@ -76,7 +76,9 @@ const MissingBearerTokenError = Schema.Struct({
 
 const InvalidScopeError = Schema.Struct({
   _tag: Schema.Literal("InvalidScope"),
-  error: Schema.Literal("Your PSN access token appears to be missing Media Gallery permissions. Please generate a Bearer token from the PlayStation App NPSSO flow."),
+  error: Schema.Literal(
+    "Your PSN access token appears to be missing Media Gallery permissions. Please generate a Bearer token from the PlayStation App NPSSO flow.",
+  ),
   status: Schema.Literal(401),
   psnBody: Schema.String,
 });
@@ -90,8 +92,15 @@ const PsnFetchFailedError = Schema.Struct({
 
 // Endpoint-specific error unions
 export const AuthErrors = Schema.Union(MissingNpssoError, AuthFailedError);
-export const RefreshErrors = Schema.Union(MissingRefreshTokenError, RefreshFailedError);
-export const CapturesErrors = Schema.Union(MissingBearerTokenError, InvalidScopeError, PsnFetchFailedError);
+export const RefreshErrors = Schema.Union(
+  MissingRefreshTokenError,
+  RefreshFailedError,
+);
+export const CapturesErrors = Schema.Union(
+  MissingBearerTokenError,
+  InvalidScopeError,
+  PsnFetchFailedError,
+);
 
 // Define the API
 export class PsnApi extends HttpApi.make("psn")
@@ -118,4 +127,3 @@ export class PsnApi extends HttpApi.make("psn")
         .addError(CapturesErrors),
     ),
   ) {}
-

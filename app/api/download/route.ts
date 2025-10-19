@@ -1,62 +1,70 @@
-import type { NextRequest } from "next/server"
+import type { NextRequest } from "next/server";
 
 export function parseCookies(cookieHeader: string | null) {
-  const map = new Map<string, string>()
-  if (!cookieHeader) return map
+  const map = new Map<string, string>();
+  if (!cookieHeader) return map;
   cookieHeader.split(";").forEach((part) => {
-    const [k, ...v] = part.trim().split("=")
-    if (k) map.set(k, v.join("="))
-  })
-  return map
+    const [k, ...v] = part.trim().split("=");
+    if (k) map.set(k, v.join("="));
+  });
+  return map;
 }
 
 export function isAllowedHost(url: URL) {
   // Restrict to known media/CDN hosts to reduce abuse.
-  const host = url.hostname.toLowerCase()
-  return host.includes("cloudfront") || host.endsWith(".playstation.com") || host.includes("media.playstation.com")
+  const host = url.hostname.toLowerCase();
+  return (
+    host.includes("cloudfront") ||
+    host.endsWith(".playstation.com") ||
+    host.includes("media.playstation.com")
+  );
 }
 
 export async function GET(req: NextRequest) {
-  const urlParam = req.nextUrl.searchParams.get("url")
+  const urlParam = req.nextUrl.searchParams.get("url");
   if (!urlParam) {
-    return new Response("Missing url", { status: 400 })
+    return new Response("Missing url", { status: 400 });
   }
 
-  let target: URL
+  let target: URL;
   try {
-    target = new URL(urlParam)
+    target = new URL(urlParam);
   } catch {
-    return new Response("Invalid url", { status: 400 })
+    return new Response("Invalid url", { status: 400 });
   }
 
   if (target.protocol !== "https:") {
-    return new Response("Only https URLs allowed", { status: 400 })
+    return new Response("Only https URLs allowed", { status: 400 });
   }
   if (!isAllowedHost(target)) {
-    return new Response("Host not allowed", { status: 403 })
+    return new Response("Host not allowed", { status: 403 });
   }
 
-  const cookieHeader = req.headers.get("cookie")
-  const cookies = parseCookies(cookieHeader)
-  const cf = cookies.get("psn_cf")
+  const cookieHeader = req.headers.get("cookie");
+  const cookies = parseCookies(cookieHeader);
+  const cf = cookies.get("psn_cf");
   if (!cf) {
-    return new Response("Missing PSN CloudFront cookie (fetch captures first)", { status: 401 })
+    return new Response(
+      "Missing PSN CloudFront cookie (fetch captures first)",
+      { status: 401 },
+    );
   }
 
   // Stream file through our server with CloudFront cookies
   const upstream = await fetch(target.toString(), {
     headers: { Cookie: decodeURIComponent(cf) },
-  })
+  });
 
   if (!upstream.ok || !upstream.body) {
-    return new Response("Unable to fetch file", { status: 502 })
+    return new Response("Unable to fetch file", { status: 502 });
   }
 
   // Try to preserve filename/type
-  const contentType = upstream.headers.get("content-type") ?? "application/octet-stream"
+  const contentType =
+    upstream.headers.get("content-type") ?? "application/octet-stream";
   const disposition =
     upstream.headers.get("content-disposition") ??
-    `attachment; filename="${encodeURIComponent(target.pathname.split("/").pop() || "capture")}"`
+    `attachment; filename="${encodeURIComponent(target.pathname.split("/").pop() || "capture")}"`;
 
   return new Response(upstream.body, {
     status: 200,
@@ -65,5 +73,5 @@ export async function GET(req: NextRequest) {
       "content-disposition": disposition,
       "cache-control": "private, max-age=0, must-revalidate",
     },
-  })
+  });
 }

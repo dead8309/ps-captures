@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import type {
-  RawCapture,
   BaseCapture,
-  VideoCapture,
-  ImageCapture,
   Capture,
+  ImageCapture,
+  RawCapture,
+  VideoCapture,
 } from "@/lib/psn";
 import { PSN_BASE_URL } from "@/lib/psn";
 

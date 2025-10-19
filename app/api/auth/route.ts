@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const AUTH_URL =
   "https://ca.account.sony.com/api/authz/v3/oauth/authorize?access_type=offline&client_id=09515159-7237-4370-9b40-3806e67c0891&response_type=code&scope=psn:mobile.v2.core%20psn:clientapp&redirect_uri=com.scee.psxandroid.scecompcall://redirect";
@@ -75,4 +76,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

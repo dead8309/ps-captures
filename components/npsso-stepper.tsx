@@ -1,12 +1,11 @@
 "use client";
 
-import * as React from "react";
+import { CheckCircle, Copy, ExternalLink, Key, LogIn } from "lucide-react";
 import Link from "next/link";
-import { LogIn, Key, Copy, CheckCircle, ExternalLink } from "lucide-react";
-
-import { defineStepper } from "@/components/ui/stepper";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { defineStepper } from "@/components/ui/stepper";
 
 const { Stepper } = defineStepper(
   {
@@ -32,7 +31,7 @@ const { Stepper } = defineStepper(
     title: "Enter Token",
     description: "Paste token to access captures",
     icon: <CheckCircle className="size-4" />,
-  }
+  },
 );
 
 interface NpssoStepperProps {
@@ -60,7 +59,9 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                     {step.id === "step-1" && (
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">
-                          Open your web browser and navigate to the PlayStation Store, then log in to your PlayStation Network account using your email and password.
+                          Open your web browser and navigate to the PlayStation
+                          Store, then log in to your PlayStation Network account
+                          using your email and password.
                         </p>
                         <Link
                           href="https://store.playstation.com/"
@@ -76,7 +77,8 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                     {step.id === "step-2" && (
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">
-                          Once logged in, go to this special URL to retrieve your NPSSO token.
+                          Once logged in, go to this special URL to retrieve
+                          your NPSSO token.
                         </p>
                         <Link
                           href="https://ca.account.sony.com/api/v1/ssocookie"
@@ -92,7 +94,8 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                     {step.id === "step-3" && (
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">
-                        You&apos;ll see a JSON response. Copy the value of the &quot;npsso&quot; field.
+                          You&apos;ll see a JSON response. Copy the value of the
+                          &quot;npsso&quot; field.
                         </p>
                         <code className="text-sm bg-muted px-2 py-1 rounded font-mono text-muted-foreground block">
                           {"{ &quot;npsso&quot;: &quot;your_token_here&quot; }"}
@@ -102,7 +105,8 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                     {step.id === "step-4" && (
                       <div className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                          Paste your NPSSO token below to access your PlayStation captures.
+                          Paste your NPSSO token below to access your
+                          PlayStation captures.
                         </p>
                         <Input
                           value={token}
@@ -110,7 +114,12 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                           placeholder="Paste your NPSSO token here"
                           className="w-full"
                         />
-                        <Button onClick={() => onEnterToken(token)} size="lg" className="w-full" disabled={!token.trim()}>
+                        <Button
+                          onClick={() => onEnterToken(token)}
+                          size="lg"
+                          className="w-full"
+                          disabled={!token.trim()}
+                        >
                           Continue
                         </Button>
                       </div>
@@ -127,9 +136,7 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                         </Button>
                       )}
                       {!methods.isLast && (
-                        <Button onClick={methods.next}>
-                          Next
-                        </Button>
+                        <Button onClick={methods.next}>Next</Button>
                       )}
                     </Stepper.Controls>
                   </Stepper.Panel>

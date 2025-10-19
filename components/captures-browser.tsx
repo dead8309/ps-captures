@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { Input } from "@/components/ui/input";
+import {
+  Result,
+  useAtom,
+  useAtomSet,
+  useAtomValue,
+} from "@effect-atom/atom-react";
+import { AlertCircleIcon, Gamepad2, KeyRoundIcon } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { NpssoStepper } from "@/components/npsso-stepper";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CaptureCard } from "./capture-card";
 import {
   Dialog,
   DialogContent,
@@ -12,16 +22,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Capture } from "@/lib/psn";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { AlertCircleIcon, KeyRoundIcon, Gamepad2 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Empty,
   EmptyContent,
@@ -30,18 +30,23 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { NpssoStepper } from "@/components/npsso-stepper";
-import { toast } from "sonner";
-import { useAtom, useAtomValue, useAtomSet, Result } from "@effect-atom/atom-react";
+import { Input } from "@/components/ui/input";
 import {
-  npssoAtom,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   accessTokenAtom,
-  refreshTokenAtom,
   authAtom,
   capturesAtom,
+  npssoAtom,
+  refreshTokenAtom,
 } from "@/lib/atoms";
-
-
+import type { Capture } from "@/lib/psn";
+import { cn } from "@/lib/utils";
+import { CaptureCard } from "./capture-card";
+import { GameSkeleton } from "./game-skeleton";
 
 export function CapturesBrowser({ className }: { className?: string }) {
   const [npsso, setNpsso] = useAtom(npssoAtom);
@@ -78,7 +83,7 @@ export function CapturesBrowser({ className }: { className?: string }) {
         toast.error("Failed to authenticate. Please try again later.");
       },
     });
-  }, [authResult, input, setNpsso, setAccessToken, setRefreshToken, setDialogOpen]);
+  }, [authResult, input, setNpsso, setAccessToken, setRefreshToken]);
 
   const capturesData = Result.match(capturesResult, {
     onInitial: () => ({ captures: [] as Capture[], tokenizedSupported: false }),
@@ -166,22 +171,8 @@ export function CapturesBrowser({ className }: { className?: string }) {
       <div className="flex-1 px-6 pb-12">
         {isLoading ? (
           <div className="space-y-8">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <section key={i}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Skeleton className="w-16 h-16 rounded-[12px] bg-muted" />
-                  <Skeleton className="h-10 w-48 bg-muted" />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_, j) => (
-                    <Skeleton
-                      key={j}
-                      className="w-full aspect-video bg-muted border"
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
+            <GameSkeleton />
+            <GameSkeleton />
           </div>
         ) : Object.keys(groupedCaptures).length ? (
           <div className="space-y-8">
@@ -191,10 +182,13 @@ export function CapturesBrowser({ className }: { className?: string }) {
                 <section key={game}>
                   <div className="flex items-center gap-3 mb-4">
                     {titleImageUrl && (
-                      <img
+                      <Image
+                        width={64}
+                        height={64}
+                        style={{ objectFit: "cover" }}
                         src={titleImageUrl}
                         alt={game}
-                        className="size-16 rounded-[12px] object-cover"
+                        className="rounded-[12px]"
                       />
                     )}
                     <h3 className="text-2xl font-bold text-foreground">
@@ -229,11 +223,13 @@ export function CapturesBrowser({ className }: { className?: string }) {
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent className="min-w-lg">
-                <NpssoStepper onEnterToken={(token) => {
-                  if (token.trim()) {
-                    authSet({ payload: { npsso: token.trim() } });
-                  }
-                }} />
+                <NpssoStepper
+                  onEnterToken={(token) => {
+                    if (token.trim()) {
+                      authSet({ payload: { npsso: token.trim() } });
+                    }
+                  }}
+                />
               </EmptyContent>
             </Empty>
           </div>
