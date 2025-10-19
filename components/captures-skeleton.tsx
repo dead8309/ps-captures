@@ -1,6 +1,19 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function GameSkeleton() {
+export function CapturesSkeleton() {
+  return (
+    <div className="flex flex-col gap-8 min-h-dvh">
+      <div className="flex-1 px-6 pb-12">
+        <div className="space-y-8">
+          <GameSkeleton />
+          <GameSkeleton />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GameSkeleton() {
   return (
     <section>
       <div className="flex items-center gap-3 mb-4">
