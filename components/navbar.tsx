@@ -62,8 +62,45 @@ export function Navbar() {
         setRefreshToken(success.value.refresh_token);
         setDialogOpen(false);
       },
-      onFailure: () => {
-        toast.error("Failed to authenticate. Please try again later.");
+      onFailure: (error) => {
+        if (error.cause._tag === "Fail") {
+          const tag = error.cause.error._tag;
+          switch (tag) {
+            case "AuthCodeFailed":
+              toast.error(
+                "Failed to obtain authorization code from PSN. Please try again.",
+              );
+              break;
+            case "NoRedirect":
+              toast.error(
+                "No redirect received from PSN. Please check your NPSSO token.",
+              );
+              break;
+            case "NoAuthCode":
+              toast.error(
+                "No authorization code found in PSN response. Please try again.",
+              );
+            case "TokenExchangeFailed":
+              toast.error(
+                "Failed to exchange code for tokens. Please try again later.",
+              );
+              break;
+
+            case "MissingTokens":
+              toast.error(
+                "Access or refresh token missing from PSN. Please try again.",
+              );
+              break;
+            case "RateLimitedError":
+              toast.error(
+                "You have been rate-limited by PSN. Please try after some time.",
+              );
+            default:
+              toast.error(
+                "An unexpected error occurred. Please try again later.",
+              );
+          }
+        }
       },
     });
   }, [authResult, input, setNpsso, setAccessToken, setRefreshToken]);

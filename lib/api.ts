@@ -2,6 +2,16 @@ import * as HttpApi from "@effect/platform/HttpApi";
 import * as HttpApiEndpoint from "@effect/platform/HttpApiEndpoint";
 import * as HttpApiGroup from "@effect/platform/HttpApiGroup";
 import * as Schema from "effect/Schema";
+import {
+  AuthCodeFailed,
+  MissingTokens,
+  NetworkError,
+  NoAuthCode,
+  NoRedirect,
+  RefreshFailed,
+  TokenExchangeFailed,
+  RateLimitedError,
+} from "./services/auth";
 
 // Define schemas for Capture
 const BaseCapture = Schema.Struct({
@@ -47,75 +57,36 @@ export const CapturesResponse = Schema.Struct({
   captures: Schema.Array(CaptureSchema),
 });
 
-// Error schemas with discriminated unions
-const MissingNpssoError = Schema.Struct({
-  _tag: Schema.Literal("MissingNpsso"),
-  error: Schema.Literal("NPSSO token required"),
-});
+export class InvalidScope extends Schema.TaggedError<InvalidScope>()(
+  "InvalidScope",
+  {},
+) {}
 
-const AuthFailedError = Schema.Struct({
-  _tag: Schema.Literal("AuthFailed"),
-  error: Schema.Literal("Authentication failed"),
-});
+export class PsnFetchFailed extends Schema.TaggedError<PsnFetchFailed>()(
+  "PsnFetchFailed",
+  {},
+) {}
 
-const MissingRefreshTokenError = Schema.Struct({
-  _tag: Schema.Literal("MissingRefreshToken"),
-  error: Schema.Literal("Refresh token required"),
-});
-
-const RefreshFailedError = Schema.Struct({
-  _tag: Schema.Literal("RefreshFailed"),
-  error: Schema.Literal("Token refresh failed"),
-});
-
-const MissingBearerTokenError = Schema.Struct({
-  _tag: Schema.Literal("MissingBearerToken"),
-  error: Schema.Literal("Missing Bearer token"),
-});
-
-const InvalidScopeError = Schema.Struct({
-  _tag: Schema.Literal("InvalidScope"),
-  error: Schema.Literal(
-    "Your PSN access token appears to be missing Media Gallery permissions. Please generate a Bearer token from the PlayStation App NPSSO flow.",
-  ),
-  status: Schema.Literal(401),
-  psnBody: Schema.String,
-});
-
-const PsnFetchFailedError = Schema.Struct({
-  _tag: Schema.Literal("PsnFetchFailed"),
-  error: Schema.Literal("PSN fetch failed"),
-  status: Schema.Number,
-  body: Schema.String,
-});
-
-// Endpoint-specific error unions
-export const AuthErrors = Schema.Union(MissingNpssoError, AuthFailedError);
-export const RefreshErrors = Schema.Union(
-  MissingRefreshTokenError,
-  RefreshFailedError,
-);
-export const CapturesErrors = Schema.Union(
-  MissingBearerTokenError,
-  InvalidScopeError,
-  PsnFetchFailedError,
-);
-
-// Define the API
 export class PsnApi extends HttpApi.make("psn")
   .add(
     HttpApiGroup.make("auth")
       .add(
-        HttpApiEndpoint.post("authenticate", "/auth")
+        HttpApiEndpoint.post("authenticate", "/auth/authenticate")
           .setPayload(Schema.Struct({ npsso: Schema.String }))
           .addSuccess(AuthResponse)
-          .addError(AuthErrors),
+          .addError(AuthCodeFailed)
+          .addError(NoRedirect)
+          .addError(NoAuthCode)
+          .addError(TokenExchangeFailed)
+          .addError(MissingTokens)
+          .addError(NetworkError)
+          .addError(RateLimitedError),
       )
       .add(
-        HttpApiEndpoint.post("refresh", "/refresh")
+        HttpApiEndpoint.post("refresh", "/auth/refresh")
           .setPayload(Schema.Struct({ refresh_token: Schema.String }))
           .addSuccess(AuthResponse)
-          .addError(RefreshErrors),
+          .addError(RefreshFailed),
       ),
   )
   .add(
@@ -123,6 +94,8 @@ export class PsnApi extends HttpApi.make("psn")
       HttpApiEndpoint.get("list", "/captures")
         .setHeaders(Schema.Struct({ Authorization: Schema.String }))
         .addSuccess(CapturesResponse)
-        .addError(CapturesErrors),
+        .addError(InvalidScope)
+        .addError(PsnFetchFailed),
     ),
-  ) {}
+  )
+  .prefix("/api") {}
