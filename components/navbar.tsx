@@ -80,6 +80,7 @@ export function Navbar() {
               toast.error(
                 "No authorization code found in PSN response. Please try again.",
               );
+              break;
             case "TokenExchangeFailed":
               toast.error(
                 "Failed to exchange code for tokens. Please try again later.",
@@ -95,6 +96,7 @@ export function Navbar() {
               toast.error(
                 "You have been rate-limited by PSN. Please try after some time.",
               );
+              break;
             default:
               toast.error(
                 "An unexpected error occurred. Please try again later.",
