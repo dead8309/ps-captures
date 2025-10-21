@@ -185,7 +185,7 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
 
 export const PsnAuthLive = PsnAuth.Default;
 
-export const PsnAuthMock = Layer.mock(PsnAuth, {
+export const PsnAuthTest = Layer.mock(PsnAuth, {
   _tag: "PsnAuth",
   authenticate: (npsso: string) =>
     Effect.succeed({

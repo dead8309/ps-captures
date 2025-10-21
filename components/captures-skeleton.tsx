@@ -7,6 +7,8 @@ export function CapturesSkeleton() {
         <div className="space-y-8">
           <GameSkeleton />
           <GameSkeleton />
+          <GameSkeleton />
+          <GameSkeleton />
         </div>
       </div>
     </div>
