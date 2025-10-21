@@ -105,7 +105,7 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
 
         const tokenResponse = yield* client.execute(tokenRequest);
 
-        if (tokenResponse.status == 429) {
+        if (tokenResponse.status === 429) {
           return yield* new RateLimitedError();
         }
 
@@ -184,3 +184,17 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
 }) {}
 
 export const PsnAuthLive = PsnAuth.Default;
+
+export const PsnAuthMock = Layer.mock(PsnAuth, {
+  _tag: "PsnAuth",
+  authenticate: (npsso: string) =>
+    Effect.succeed({
+      access_token: `fake_access_${npsso.slice(0, 10)}`,
+      refresh_token: `fake_refresh_${npsso.slice(0, 10)}`,
+    }),
+  refresh: (refreshToken: string) =>
+    Effect.succeed({
+      access_token: `refreshed_access_${refreshToken.slice(0, 10)}`,
+      refresh_token: `refreshed_refresh_${refreshToken.slice(0, 10)}`,
+    }),
+});
