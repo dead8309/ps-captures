@@ -3,8 +3,12 @@ import * as HttpMiddleware from "@effect/platform/HttpMiddleware";
 import * as HttpServer from "@effect/platform/HttpServer";
 import { Effect, Layer } from "effect";
 import { PsnApi } from "./api";
-import { PsnAuth, PsnAuthTest } from "./services/auth";
-import { PsnCaptures, PsnCapturesTest } from "./services/captures";
+import { PsnAuth, PsnAuthLive, PsnAuthTest } from "./services/auth";
+import {
+  PsnCaptures,
+  PsnCapturesLive,
+  PsnCapturesTest,
+} from "./services/captures";
 
 const AuthGroupLive = HttpApiBuilder.group(PsnApi, "auth", (handlers) =>
   handlers
@@ -45,8 +49,11 @@ const middleware = Layer.mergeAll(
 export const PsnApiHandler = Layer.empty.pipe(
   Layer.merge(middleware),
   Layer.provideMerge(ApiLive),
-  Layer.provide(PsnAuthTest),
-  Layer.provide(PsnCapturesTest),
+  Layer.provide(PsnAuthLive),
+  Layer.provide(PsnCapturesLive),
+
+  // Layer.provide(PsnAuthTest),
+  // Layer.provide(PsnCapturesTest),
   Layer.merge(HttpServer.layerContext),
   HttpApiBuilder.toWebHandler,
 );
