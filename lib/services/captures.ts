@@ -2,10 +2,9 @@ import {
   FetchHttpClient,
   HttpClient,
   HttpClientRequest,
-  HttpClientResponse,
 } from "@effect/platform";
 import { Effect, Layer, Schema } from "effect";
-import { Capture, PSN_BASE_URL, PsnCapturesResponseSchema } from "../psn";
+import { PSN_BASE_URL, PsnCapturesResponseSchema } from "../psn";
 
 export class CapturesFetchFailed extends Schema.TaggedError<CapturesFetchFailed>()(
   "CapturesFetchFailed",
@@ -42,11 +41,14 @@ export class PsnCaptures extends Effect.Service<PsnCaptures>()("PsnCaptures", {
       Effect.gen(function* () {
         const tryFetch = (tokenized: boolean) =>
           Effect.gen(function* () {
-            const response = yield* client.execute(
+            const response = yield* HttpClientRequest.get(
+              makeUrl(tokenized),
+            ).pipe(
               HttpClientRequest.setHeader(
                 "Authorization",
                 `Bearer ${accessToken}`,
-              )(HttpClientRequest.get(makeUrl(tokenized))),
+              ),
+              client.execute,
             );
 
             if (response.status === 403) {

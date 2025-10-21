@@ -36,12 +36,6 @@ export const CaptureSchema = Schema.Union(
   ImageCaptureSchema,
 );
 
-// Derived types from schemas
-export type Capture = typeof CaptureSchema.Type;
-export type VideoCapture = typeof VideoCaptureSchema.Type;
-export type ImageCapture = typeof ImageCaptureSchema.Type;
-export type RawCapture = typeof RawCaptureSchema.Type;
-
 export const RawCaptureSchema = Schema.Struct({
   id: Schema.String,
   language: Schema.String,
@@ -129,3 +123,8 @@ export const PsnCapturesResponseSchema = Schema.Struct({
 
 export const PSN_BASE_URL =
   "https://m.np.playstation.com/api/gameMediaService/v2/c2s/category/cloudMediaGallery/ugcType/all";
+
+export type Capture = typeof CaptureSchema.Type;
+export type VideoCapture = typeof VideoCaptureSchema.Type;
+export type ImageCapture = typeof ImageCaptureSchema.Type;
+export type RawCapture = typeof RawCaptureSchema.Type;

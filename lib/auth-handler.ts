@@ -4,15 +4,7 @@ import * as HttpServer from "@effect/platform/HttpServer";
 import { Effect, Layer } from "effect";
 import { PsnApi } from "./api";
 import { PsnAuth, PsnAuthTest } from "./services/auth";
-import {
-  CapturesFetchFailed,
-  CapturesNetworkError,
-  CapturesParseError,
-  InvalidToken,
-  PsnCaptures,
-  PsnCapturesTest,
-} from "./services/captures";
-import { Capture } from "./psn";
+import { PsnCaptures, PsnCapturesTest } from "./services/captures";
 
 const AuthGroupLive = HttpApiBuilder.group(PsnApi, "auth", (handlers) =>
   handlers
@@ -35,13 +27,7 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
     Effect.gen(function* () {
       const authorization = headers.authorization;
       const captures = yield* PsnCaptures;
-      return yield* captures.list(authorization) as Effect.Effect<
-        { captures: readonly Capture[] },
-        | CapturesFetchFailed
-        | InvalidToken
-        | CapturesNetworkError
-        | CapturesParseError
-      >;
+      return yield* captures.list(authorization);
     }),
   ),
 );
