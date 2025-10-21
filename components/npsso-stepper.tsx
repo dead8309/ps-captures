@@ -43,7 +43,7 @@ const npssoJson = '{ "npsso": "your_token_here" }';
 export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
   const [token, setToken] = React.useState("");
   return (
-    <Stepper.Provider className="space-y-4" variant="vertical" tracking={true}>
+    <Stepper.Provider className="space-y-4" variant="vertical">
       {({ methods }) => (
         <React.Fragment>
           <Stepper.Navigation>
