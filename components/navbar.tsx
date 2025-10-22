@@ -71,11 +71,6 @@ export function Navbar() {
                 "Failed to obtain authorization code from PSN. Please try again.",
               );
               break;
-            case "NoRedirect":
-              toast.error(
-                "No redirect received from PSN. Please check your NPSSO token.",
-              );
-              break;
             case "NoAuthCode":
               toast.error(
                 "No authorization code found in PSN response. Please try again.",
@@ -87,11 +82,6 @@ export function Navbar() {
               );
               break;
 
-            case "MissingTokens":
-              toast.error(
-                "Access or refresh token missing from PSN. Please try again.",
-              );
-              break;
             case "RateLimitedError":
               toast.error(
                 "You have been rate-limited by PSN. Please try after some time.",

@@ -3,10 +3,8 @@ import { Schema } from "effect";
 import { CaptureSchema } from "./psn";
 import {
   AuthCodeFailed,
-  MissingTokens,
   NetworkError,
   NoAuthCode,
-  NoRedirect,
   RateLimitedError,
   RefreshFailed,
   TokenExchangeFailed,
@@ -36,10 +34,8 @@ export class PsnApi extends HttpApi.make("psn")
           .setPayload(Schema.Struct({ npsso: Schema.String }))
           .addSuccess(AuthResponse)
           .addError(AuthCodeFailed)
-          .addError(NoRedirect)
           .addError(NoAuthCode)
           .addError(TokenExchangeFailed)
-          .addError(MissingTokens)
           .addError(NetworkError)
           .addError(RateLimitedError),
       )
