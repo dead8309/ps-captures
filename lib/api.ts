@@ -15,6 +15,22 @@ import {
   CapturesParseError,
   InvalidToken,
 } from "./services/captures";
+import { PreviewFetchFailed } from "./services/media";
+
+// Preview errors
+export class PreviewMissingUrl extends Schema.TaggedError<PreviewMissingUrl>()(
+  "PreviewMissingUrl",
+  {
+    message: Schema.String,
+  },
+) {}
+
+export class PreviewMissingCookie extends Schema.TaggedError<PreviewMissingCookie>()(
+  "PreviewMissingCookie",
+  {
+    message: Schema.String,
+  },
+) {}
 
 // Define schemas
 export const AuthResponse = Schema.Struct({
@@ -47,14 +63,23 @@ export class PsnApi extends HttpApi.make("psn")
       ),
   )
   .add(
-    HttpApiGroup.make("captures").add(
-      HttpApiEndpoint.get("list", "/captures")
-        .setHeaders(Schema.Struct({ authorization: Schema.String }))
-        .addSuccess(CapturesResponse)
-        .addError(CapturesFetchFailed)
-        .addError(InvalidToken)
-        .addError(CapturesNetworkError)
-        .addError(CapturesParseError),
-    ),
+    HttpApiGroup.make("captures")
+      .add(
+        HttpApiEndpoint.get("list", "/captures")
+          .setHeaders(Schema.Struct({ authorization: Schema.String }))
+          .addSuccess(CapturesResponse)
+          .addError(CapturesFetchFailed)
+          .addError(InvalidToken)
+          .addError(CapturesNetworkError)
+          .addError(CapturesParseError),
+      )
+      .add(
+        HttpApiEndpoint.get("preview", "/captures/preview")
+          .setUrlParams(Schema.Struct({ url: Schema.String }))
+          .addSuccess(Schema.Uint8Array)
+          .addError(PreviewMissingUrl)
+          .addError(PreviewMissingCookie)
+          .addError(PreviewFetchFailed),
+      ),
   )
   .prefix("/api") {}

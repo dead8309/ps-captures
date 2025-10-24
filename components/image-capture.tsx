@@ -25,7 +25,7 @@ export function ImageCaptureCard({
           <div className="aspect-video relative">
             <img
               style={{ objectFit: "cover" }}
-              src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
+              src={`/api/captures/preview?url=${encodeURIComponent(capture.preview)}`}
               alt={capture.title || "Capture"}
               referrerPolicy="no-referrer"
             />

@@ -107,7 +107,7 @@ export function VideoCaptureCard({
               <>
                 <video
                   ref={videoRef}
-                  poster={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
+                  poster={`/api/captures/preview?url=${encodeURIComponent(capture.preview)}`}
                   className="w-full h-full object-cover"
                   muted
                   loop
@@ -123,7 +123,7 @@ export function VideoCaptureCard({
             ) : (
               <img
                 style={{ objectFit: "cover" }}
-                src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
+                src={`/api/captures/preview?url=${encodeURIComponent(capture.preview)}`}
                 alt={capture.title || "Capture"}
                 referrerPolicy="no-referrer"
               />
