@@ -6,6 +6,8 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { defineStepper } from "@/components/ui/stepper";
+import { useAtom, useAtomRef, useAtomSet } from "@effect-atom/atom-react";
+import { authAtom, npssoAtom } from "@/lib/atoms";
 
 const { Stepper } = defineStepper(
   {
@@ -34,14 +36,17 @@ const { Stepper } = defineStepper(
   },
 );
 
-interface NpssoStepperProps {
-  onEnterToken: (token: string) => void;
-}
-
 const npssoJson = '{ "npsso": "your_token_here" }';
 
-export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
-  const [token, setToken] = React.useState("");
+export function NpssoStepper() {
+  const [token, setNpsso] = useAtom(npssoAtom);
+  const authSet = useAtomSet(authAtom);
+
+  const handleEnterToken = (token: string) => {
+    if (token.trim()) {
+      authSet({ payload: { npsso: token.trim() } });
+    }
+  };
   return (
     <Stepper.Provider className="space-y-4" variant="vertical">
       {({ methods }) => (
@@ -112,12 +117,12 @@ export function NpssoStepper({ onEnterToken }: NpssoStepperProps) {
                         </p>
                         <Input
                           value={token}
-                          onChange={(e) => setToken(e.target.value)}
+                          onChange={(e) => setNpsso(e.target.value)}
                           placeholder="Paste your NPSSO token here"
                           className="w-full"
                         />
                         <Button
-                          onClick={() => onEnterToken(token)}
+                          onClick={() => handleEnterToken(token)}
                           size="lg"
                           className="w-full"
                           disabled={!token.trim()}

@@ -11,16 +11,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { authAtom } from "@/lib/atoms";
 
 export function Onboarding() {
-  const authSet = useAtomSet(authAtom);
-
-  const handleEnterToken = (token: string) => {
-    if (token.trim()) {
-      authSet({ payload: { npsso: token.trim() } });
-    }
-  };
   return (
     <div className="flex flex-col gap-8 min-h-dvh">
       <div className="flex-1 px-6 pb-12">
@@ -38,7 +30,7 @@ export function Onboarding() {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent className="min-w-lg">
-              <NpssoStepper onEnterToken={handleEnterToken} />
+              <NpssoStepper />
             </EmptyContent>
           </Empty>
         </div>
