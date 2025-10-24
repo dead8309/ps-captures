@@ -45,32 +45,56 @@ export class PsnCaptures extends Effect.Service<PsnCaptures>()("PsnCaptures", {
               }),
             );
 
+            const cookieHeaders = response.headers.getSetCookie() ?? [];
+            const cloudfrontCookies = cookieHeaders
+              .filter((c) => /^CloudFront/i.test(c))
+              .map((c) => c.split(";")[0])
+              .join("; ");
+
             if (response.status === 403) {
               const text = yield* Effect.tryPromise(() => response.text());
               const error = /Invalid PSN scope/i.test(text)
                 ? new InvalidToken()
                 : new CapturesFetchFailed();
-              return yield* Effect.fail(error);
+              return yield* Effect.fail({
+                ...error,
+                cookie: cloudfrontCookies,
+              });
             } else if (response.status >= 400) {
               return yield* Effect.fail(new CapturesFetchFailed());
             } else {
-              return yield* Effect.tryPromise(() => response.json());
+              const data = yield* Effect.tryPromise(() => response.json());
+              return { data, cookie: cloudfrontCookies };
             }
           });
 
-        const data = yield* tryFetch(true).pipe(
-          Effect.catchTag("InvalidToken", () => tryFetch(false)),
+        const result = yield* tryFetch(true).pipe(
+          Effect.catchTag("InvalidToken", (failed) => {
+            return tryFetch(false).pipe(
+              Effect.map((success) => ({
+                ...success,
+                cookie: failed.cookie || success.cookie,
+              })),
+            );
+          }),
         );
 
-        yield* Effect.log(data)
-        return yield* Schema.decodeUnknown(PsnCapturesResponseSchema)(
-          data,
+        const parsed = yield* Schema.decodeUnknown(PsnCapturesResponseSchema)(
+          result.data,
         ).pipe(
           Effect.catchTag("ParseError", () =>
             Effect.fail(new CapturesParseError()),
           ),
         );
-      });
+        return {
+          captures: parsed.captures,
+          cookie: result.cookie,
+        };
+      }).pipe(
+        Effect.catchTag("UnknownException", (e) =>
+          Effect.die(`Unknown Exception occurred: ${e.cause}`),
+        ),
+      );
 
     return { list };
   }),
@@ -80,5 +104,5 @@ export const PsnCapturesLive = PsnCaptures.Default;
 
 export const PsnCapturesTest = Layer.mock(PsnCaptures, {
   _tag: "PsnCaptures",
-  list: (_token: string) => Effect.succeed({ captures: [] }),
+  list: (_token: string) => Effect.succeed({ captures: [], cookie: "" }),
 });

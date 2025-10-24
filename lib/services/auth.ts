@@ -164,7 +164,11 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
         }
 
         return { access_token, refresh_token: new_refresh_token };
-      });
+      }).pipe(
+        Effect.catchTag("UnknownException", (e) =>
+          Effect.die(`Unknown Exception occurred: ${e.cause}`),
+        ),
+      );
 
     return { authenticate, refresh };
   }),

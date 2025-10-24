@@ -1,8 +1,12 @@
-import * as HttpApiBuilder from "@effect/platform/HttpApiBuilder";
-import * as HttpMiddleware from "@effect/platform/HttpMiddleware";
-import * as HttpServer from "@effect/platform/HttpServer";
+import {
+  Headers,
+  HttpApiBuilder,
+  HttpMiddleware,
+  HttpServer,
+  HttpServerResponse,
+} from "@effect/platform";
 import { Effect, Layer } from "effect";
-import { PsnApi } from "./api";
+import { PsnApi, CapturesResponse } from "./api";
 import { PsnAuth, PsnAuthLive } from "./services/auth";
 import { PsnCaptures, PsnCapturesLive } from "./services/captures";
 
@@ -27,7 +31,28 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
     Effect.gen(function* () {
       const authorization = headers.authorization;
       const captures = yield* PsnCaptures;
-      return yield* captures.list(authorization);
+      const result = yield* captures.list(authorization);
+      const responseHeaders = Headers.fromInput({
+        "Set-Cookie": [
+          `psn_cf=${encodeURIComponent(result.cookie)}`,
+          "Path=/",
+          "HttpOnly",
+          "Secure",
+          "SameSite=Lax",
+          "Max-Age=3600",
+        ].join("; "),
+      });
+      return yield* HttpServerResponse.schemaJson(CapturesResponse)(
+        { captures: result.captures },
+        {
+          headers: responseHeaders,
+          status: 200,
+        },
+      ).pipe(
+        Effect.catchTag("HttpBodyError", () =>
+          Effect.die(new Error("Cannot parse body")),
+        ),
+      );
     }),
   ),
 );
