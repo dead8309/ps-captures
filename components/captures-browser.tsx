@@ -28,8 +28,25 @@ export function CapturesBrowser() {
 
   return Result.match(capturesResult, {
     onInitial: () => <CapturesSkeleton />,
-    onFailure: (failure) => {
-      toast.error(Cause.pretty(failure.cause));
+    onFailure: (error) => {
+      if (error.cause._tag === "Fail") {
+        const tag = error.cause.error._tag;
+        switch (tag) {
+          case "CapturesFetchFailed":
+            toast.error("Failed to load captures from PlayStation Network.");
+            break;
+          case "InvalidToken":
+            toast.error("Authentication failed. Please try logging in again.");
+            break;
+          case "CapturesNetworkError":
+            toast.error("Network error while loading captures.");
+            break;
+          case "CapturesParseError":
+            toast.error("Unable to process captures data.");
+            break;
+        }
+      }
+
       return <CapturesGallery captures={[]} />;
     },
     onSuccess: (success) => (

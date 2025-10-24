@@ -56,7 +56,7 @@ export const capturesAtom = runtime.atom(
     const client = yield* PsnClient;
 
     return yield* Effect.catchAll(
-      client.captures.list({ headers: { authorization: `Bearer ${token}` } }),
+      client.captures.list({ headers: { authorization: token } }),
       (error) => {
         const shouldRetry = refreshToken && error._tag === "InvalidToken";
 
@@ -67,7 +67,7 @@ export const capturesAtom = runtime.atom(
             yield* Atom.set(refreshTokenAtom, newTokens.refresh_token);
 
             return yield* client.captures.list({
-              headers: { authorization: `Bearer ${newTokens.access_token}` },
+              headers: { authorization: newTokens.access_token },
             });
           });
         } else {

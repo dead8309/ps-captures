@@ -123,7 +123,12 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
           access_token: data.access_token,
           refresh_token: data.refresh_token,
         };
-      });
+      }).pipe(
+        Effect.catchTag("ParseError", () => Effect.die("Failed to parse json")),
+        Effect.catchTag("UnknownException", (e) =>
+          Effect.die(`Unknown Exception occurred: ${e.cause}`),
+        ),
+      );
 
     const refresh = (refresh_token: string) =>
       Effect.gen(function* () {

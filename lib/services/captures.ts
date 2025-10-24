@@ -1,10 +1,8 @@
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientRequest,
-} from "@effect/platform";
 import { Effect, Layer, Schema } from "effect";
-import { PSN_BASE_URL, PsnCapturesResponseSchema } from "../psn";
+import { PsnCapturesResponseSchema } from "../psn";
+
+const PSN_BASE_URL =
+  "https://m.np.playstation.com/api/gameMediaService/v2/c2s/category/cloudMediaGallery/ugcType/all";
 
 export class CapturesFetchFailed extends Schema.TaggedError<CapturesFetchFailed>()(
   "CapturesFetchFailed",
@@ -35,24 +33,20 @@ const makeUrl = (tokenized: boolean) => {
 
 export class PsnCaptures extends Effect.Service<PsnCaptures>()("PsnCaptures", {
   effect: Effect.gen(function* () {
-    const client = yield* HttpClient.HttpClient;
-
     const list = (accessToken: string) =>
       Effect.gen(function* () {
         const tryFetch = (tokenized: boolean) =>
           Effect.gen(function* () {
-            const response = yield* HttpClientRequest.get(
-              makeUrl(tokenized),
-            ).pipe(
-              HttpClientRequest.setHeader(
-                "Authorization",
-                `Bearer ${accessToken}`,
-              ),
-              client.execute,
+            const response = yield* Effect.tryPromise(() =>
+              fetch(makeUrl(tokenized), {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              }),
             );
 
             if (response.status === 403) {
-              const text = yield* response.text;
+              const text = yield* Effect.tryPromise(() => response.text());
               const error = /Invalid PSN scope/i.test(text)
                 ? new InvalidToken()
                 : new CapturesFetchFailed();
@@ -60,19 +54,15 @@ export class PsnCaptures extends Effect.Service<PsnCaptures>()("PsnCaptures", {
             } else if (response.status >= 400) {
               return yield* Effect.fail(new CapturesFetchFailed());
             } else {
-              return yield* response.json;
+              return yield* Effect.tryPromise(() => response.json());
             }
-          }).pipe(
-            Effect.catchTags({
-              RequestError: () => Effect.fail(new CapturesNetworkError()),
-              ResponseError: () => Effect.fail(new CapturesNetworkError()),
-            }),
-          );
+          });
 
         const data = yield* tryFetch(true).pipe(
           Effect.catchTag("InvalidToken", () => tryFetch(false)),
         );
 
+        yield* Effect.log(data)
         return yield* Schema.decodeUnknown(PsnCapturesResponseSchema)(
           data,
         ).pipe(
@@ -84,7 +74,6 @@ export class PsnCaptures extends Effect.Service<PsnCaptures>()("PsnCaptures", {
 
     return { list };
   }),
-  dependencies: [FetchHttpClient.layer],
 }) {}
 
 export const PsnCapturesLive = PsnCaptures.Default;
