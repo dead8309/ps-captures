@@ -76,7 +76,7 @@ export const RawCaptureSchema = Schema.Struct({
   downloadUrl: Schema.optional(Schema.String),
   transcodeJobId: Schema.optional(Schema.String),
   colorRange: Schema.optional(Schema.String),
-  uploadId: Schema.String,
+  uploadId: Schema.optional(Schema.String),
 });
 
 export const PsnCapturesResponseSchema = Schema.Struct({
