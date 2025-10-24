@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import type { ImageCapture } from "@/lib/psn";
 import { cn } from "@/lib/utils";
@@ -24,8 +23,7 @@ export function ImageCaptureCard({
       {capture.preview ? (
         <div className="relative w-full">
           <div className="aspect-video relative">
-            <Image
-              fill
+            <img
               style={{ objectFit: "cover" }}
               src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
               alt={capture.title || "Capture"}

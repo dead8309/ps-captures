@@ -1,7 +1,6 @@
 "use client";
 import Hls from "hls.js";
 import { PlayIcon } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { VideoCapture } from "@/lib/psn";
@@ -122,8 +121,7 @@ export function VideoCaptureCard({
                 )}
               </>
             ) : (
-              <Image
-                fill
+              <img
                 style={{ objectFit: "cover" }}
                 src={`/api/preview?url=${encodeURIComponent(capture.preview)}`}
                 alt={capture.title || "Capture"}

@@ -1,5 +1,4 @@
 import { ImageIcon } from "lucide-react";
-import Image from "next/image";
 import { useMemo } from "react";
 import {
   Empty,
@@ -56,7 +55,7 @@ export function CapturesGallery({ captures }: { captures: Capture[] }) {
               <section key={game}>
                 <div className="flex items-center gap-3 mb-4">
                   {titleImageUrl && (
-                    <Image
+                    <img
                       width={64}
                       height={64}
                       style={{ objectFit: "cover" }}
