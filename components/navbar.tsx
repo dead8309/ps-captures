@@ -32,17 +32,20 @@ import {
   refreshTokenAtom,
 } from "@/lib/atoms";
 import { Spinner } from "./ui/spinner";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const [npsso, setNpsso] = useAtom(npssoAtom);
-  const [, setAccessToken] = useAtom(accessTokenAtom);
-  const [, setRefreshToken] = useAtom(refreshTokenAtom);
+  const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
+  const [refreshToken, setRefreshToken] = useAtom(refreshTokenAtom);
   const [input, setInput] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const authSet = useAtomSet(authAtom);
   const authResult = useAtomValue(authAtom);
   const isLoading = Result.isWaiting(authResult);
+  const needsNewNpsso =
+    !accessToken || !refreshToken || Result.isFailure(authResult);
 
   useEffect(() => {
     setInput(npsso);
@@ -109,13 +112,30 @@ export function Navbar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button variant="outline" className="rounded-2xl w-14 h-14">
-                <KeyRoundIcon className="size-5" />
+              <Button
+                variant="outline"
+                className={cn("rounded-2xl w-14 h-14 relative", {
+                  "bg-destructive/5 border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50":
+                    needsNewNpsso,
+                })}
+              >
+                <KeyRoundIcon
+                  className={cn("size-5 ", {
+                    "text-destructive": needsNewNpsso,
+                  })}
+                />
+                {needsNewNpsso && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full" />
+                )}
               </Button>
             </DialogTrigger>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Set NPSSO Token</p>
+            <p>
+              {needsNewNpsso
+                ? "⚠️ Update NPSSO Token (Authentication Required)"
+                : "Set NPSSO Token"}
+            </p>
           </TooltipContent>
         </Tooltip>
         <DialogContent>
