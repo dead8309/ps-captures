@@ -1,12 +1,12 @@
 "use client";
 
+import { useAtom, useAtomRef, useAtomSet } from "@effect-atom/atom-react";
 import { CheckCircle, Copy, ExternalLink, Key, LogIn } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { defineStepper } from "@/components/ui/stepper";
-import { useAtom, useAtomRef, useAtomSet } from "@effect-atom/atom-react";
 import { authAtom, npssoAtom } from "@/lib/atoms";
 
 const { Stepper } = defineStepper(

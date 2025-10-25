@@ -7,14 +7,26 @@ import {
 } from "@effect/platform";
 import { Effect, Layer, Option } from "effect";
 import {
-  PsnApi,
   CapturesResponse,
-  PreviewMissingUrl,
   PreviewMissingCookie,
+  PreviewMissingUrl,
+  PsnApi,
+  StreamFetchFailed,
+  StreamMissingUrl,
 } from "./api";
 import { PsnAuth, PsnAuthLive } from "./services/auth";
 import { PsnCaptures, PsnCapturesLive } from "./services/captures";
 import { PsnMedia, PsnMediaLive } from "./services/media";
+
+function parseCookies(cookieHeader: string | undefined) {
+  const map = new Map<string, string>();
+  if (!cookieHeader) return map;
+  cookieHeader.split(";").forEach((part) => {
+    const [k, ...v] = part.trim().split("=");
+    if (k) map.set(k, v.join("="));
+  });
+  return map;
+}
 
 const AuthGroupLive = HttpApiBuilder.group(PsnApi, "auth", (handlers) =>
   handlers
@@ -75,13 +87,7 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
         const cookieHeader = Option.getOrUndefined(
           Headers.get(request.headers, "cookie"),
         );
-        const cookies = new Map<string, string>();
-        if (cookieHeader) {
-          cookieHeader.split(";").forEach((part: string) => {
-            const [k, ...v] = part.trim().split("=");
-            if (k) cookies.set(k, v.join("="));
-          });
-        }
+        const cookies = parseCookies(cookieHeader);
         const cfCookie = cookies.get("psn_cf");
         if (!cfCookie) {
           return yield* new PreviewMissingCookie({
@@ -105,6 +111,49 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
             status: 200,
           },
         );
+      }),
+    )
+    .handle("stream", ({ urlParams, request }) =>
+      Effect.gen(function* () {
+        const { url } = urlParams;
+        if (!url) {
+          return yield* new StreamMissingUrl({
+            message: "Missing url parameter",
+          });
+        }
+
+        const cookieHeader = Option.getOrUndefined(
+          Headers.get(request.headers, "cookie"),
+        );
+        const cookies = parseCookies(cookieHeader);
+        const cfCookie = cookies.get("psn_cf");
+        if (!cfCookie) {
+          return yield* new StreamFetchFailed({
+            message: "Missing PSN CloudFront cookie",
+          });
+        }
+        const decodedCookie = decodeURIComponent(cfCookie);
+
+        const media = yield* PsnMedia;
+        const result = yield* media.stream(url, decodedCookie);
+
+        if (result.type === "text") {
+          return yield* HttpServerResponse.text(result.text, {
+            status: 200,
+            headers: Headers.fromInput({
+              "content-type": result.contentType,
+              "cache-control": "private, max-age=0, must-revalidate",
+            }),
+          });
+        } else {
+          return yield* HttpServerResponse.stream(result.stream, {
+            status: 200,
+            headers: Headers.fromInput({
+              "content-type": result.contentType,
+              "cache-control": "private, max-age=0, must-revalidate",
+            }),
+          });
+        }
       }),
     ),
 );

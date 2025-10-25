@@ -34,7 +34,7 @@ export function VideoCaptureCard({
     if (!isHovered || !videoRef.current || !capture.videoUrl) return;
 
     const video = videoRef.current;
-    const url = `/api/stream?url=${encodeURIComponent(capture.videoUrl)}`;
+    const url = `/api/captures/stream?url=${encodeURIComponent(capture.videoUrl)}`;
 
     if (Hls.isSupported()) {
       const hls = new Hls();

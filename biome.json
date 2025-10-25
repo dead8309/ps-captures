@@ -27,6 +27,9 @@
       "recommended": true,
       "suspicious": {
         "noUnknownAtRules": "off"
+      },
+      "performance": {
+        "noImgElement": "off"
       }
     },
     "domains": {

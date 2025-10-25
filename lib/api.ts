@@ -32,6 +32,20 @@ export class PreviewMissingCookie extends Schema.TaggedError<PreviewMissingCooki
   },
 ) {}
 
+export class StreamMissingUrl extends Schema.TaggedError<StreamMissingUrl>()(
+  "StreamMissingUrl",
+  {
+    message: Schema.String,
+  },
+) {}
+
+export class StreamFetchFailed extends Schema.TaggedError<StreamFetchFailed>()(
+  "StreamFetchFailed",
+  {
+    message: Schema.String,
+  },
+) {}
+
 // Define schemas
 export const AuthResponse = Schema.Struct({
   access_token: Schema.String,
@@ -80,6 +94,13 @@ export class PsnApi extends HttpApi.make("psn")
           .addError(PreviewMissingUrl)
           .addError(PreviewMissingCookie)
           .addError(PreviewFetchFailed),
+      )
+      .add(
+        HttpApiEndpoint.get("stream", "/captures/stream")
+          .setUrlParams(Schema.Struct({ url: Schema.String }))
+          .addSuccess(Schema.Any) // Returns either string for M3U8 or stream for video
+          .addError(StreamMissingUrl)
+          .addError(StreamFetchFailed),
       ),
   )
   .prefix("/api") {}
