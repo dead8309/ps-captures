@@ -1,13 +1,21 @@
 "use client";
 
-import { useAtom, useAtomSet } from "@effect-atom/atom-react";
+import {
+  Result,
+  useAtom,
+  useAtomSet,
+  useAtomValue,
+} from "@effect-atom/atom-react";
 import { CheckCircle, Copy, ExternalLink, Key, LogIn } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { defineStepper } from "@/components/ui/stepper";
 import { authAtom, npssoAtom } from "@/lib/atoms";
+import { Spinner } from "./ui/spinner";
 
 const { Stepper } = defineStepper(
   {
@@ -41,12 +49,57 @@ const npssoJson = '{ "npsso": "your_token_here" }';
 export function NpssoStepper() {
   const [token, setNpsso] = useAtom(npssoAtom);
   const authSet = useAtomSet(authAtom);
+  const authResult = useAtomValue(authAtom);
+  const isLoading = Result.isWaiting(authResult);
 
   const handleEnterToken = (token: string) => {
     if (token.trim()) {
+      toast.loading("Authenticating with PlayStation Network...");
       authSet({ payload: { npsso: token.trim() } });
     }
   };
+
+  useEffect(() => {
+    Result.match(authResult, {
+      onInitial: () => {},
+      onSuccess: () => {
+        toast.dismiss();
+        toast.success("Successfully authenticated!");
+      },
+      onFailure: (error) => {
+        toast.dismiss();
+        if (error.cause._tag === "Fail") {
+          const tag = error.cause.error._tag;
+          switch (tag) {
+            case "AuthCodeFailed":
+              toast.error(
+                "Failed to obtain authorization code from PSN. Please try again.",
+              );
+              break;
+            case "NoAuthCode":
+              toast.error(
+                "No authorization code found in PSN response. Please try again.",
+              );
+              break;
+            case "TokenExchangeFailed":
+              toast.error(
+                "Failed to exchange code for tokens. Please try again later.",
+              );
+              break;
+            case "RateLimitedError":
+              toast.error(
+                "You have been rate-limited by PSN. Please try after some time.",
+              );
+              break;
+            default:
+              toast.error(
+                "An unexpected error occurred. Please try again later.",
+              );
+          }
+        }
+      },
+    });
+  }, [authResult]);
   return (
     <Stepper.Provider className="space-y-4" variant="vertical">
       {({ methods }) => (
@@ -125,9 +178,16 @@ export function NpssoStepper() {
                           onClick={() => handleEnterToken(token)}
                           size="lg"
                           className="w-full"
-                          disabled={!token.trim()}
+                          disabled={!token.trim() || isLoading}
                         >
-                          Continue
+                          {isLoading ? (
+                            <>
+                              <Spinner className="mr-2 h-4 w-4" />
+                              Authenticating...
+                            </>
+                          ) : (
+                            "Continue"
+                          )}
                         </Button>
                       </div>
                     )}

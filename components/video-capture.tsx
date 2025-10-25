@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { VideoCapture } from "@/lib/psn";
 import { cn } from "@/lib/utils";
+import { Spinner } from "./ui/spinner";
 
 function formatDuration(seconds: number | null | undefined): string {
   if (!seconds) return "0:00";
@@ -116,7 +117,7 @@ export function VideoCaptureCard({
                 />
                 {videoLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-card/50">
-                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <Spinner className="size-6" />
                   </div>
                 )}
               </>

@@ -31,6 +31,7 @@ import {
   npssoAtom,
   refreshTokenAtom,
 } from "@/lib/atoms";
+import { Spinner } from "./ui/spinner";
 
 export function Navbar() {
   const [npsso, setNpsso] = useAtom(npssoAtom);
@@ -41,6 +42,7 @@ export function Navbar() {
 
   const authSet = useAtomSet(authAtom);
   const authResult = useAtomValue(authAtom);
+  const isLoading = Result.isWaiting(authResult);
 
   useEffect(() => {
     setInput(npsso);
@@ -50,6 +52,7 @@ export function Navbar() {
     const trimmed = input.trim();
     if (!trimmed) return;
 
+    toast.loading("Authenticating with PlayStation Network...");
     authSet({ payload: { npsso: trimmed } });
   };
 
@@ -61,8 +64,11 @@ export function Navbar() {
         setAccessToken(success.value.access_token);
         setRefreshToken(success.value.refresh_token);
         setDialogOpen(false);
+        toast.dismiss();
+        toast.success("Successfully authenticated!");
       },
       onFailure: (error) => {
+        toast.dismiss();
         if (error.cause._tag === "Fail") {
           const tag = error.cause.error._tag;
           switch (tag) {
@@ -128,7 +134,16 @@ export function Navbar() {
               type="password"
               aria-label="PSN NPSSO token"
             />
-            <Button onClick={onUseToken}>Save</Button>
+            <Button onClick={onUseToken} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Authenticating...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
