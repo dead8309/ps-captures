@@ -8,6 +8,8 @@ export const AUTH_METADATA = {
   client_id: "09515159-7237-4370-9b40-3806e67c0891",
   scope: "psn:mobile.v2.core psn:clientapp",
   redirect_uri: "com.scee.psxandroid.scecompcall://redirect",
+  psn_client_token:
+    "MDk1MTUxNTktNzIzNy00MzcwLTliNDAtMzgwNmU2N2MwODkxOnVjUGprYTV0bnRCMktxc1A=",
 } as const;
 
 export class AuthCodeFailed extends Schema.TaggedError<AuthCodeFailed>()(
@@ -90,7 +92,7 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
         fetch(TOKEN_URL, {
           method: "POST",
           headers: {
-            Authorization: `Basic ${process.env.PSN_CLIENT_TOKEN}`,
+            Authorization: `Basic ${AUTH_METADATA.psn_client_token}`,
             "Content-Type": "application/x-www-form-urlencoded",
           },
           body: new URLSearchParams({
@@ -136,7 +138,7 @@ export class PsnAuth extends Effect.Service<PsnAuth>()("PsnAuth", {
           fetch(TOKEN_URL, {
             method: "POST",
             headers: {
-              Authorization: `Basic ${process.env.PSN_CLIENT_TOKEN}`,
+              Authorization: `Basic ${AUTH_METADATA.psn_client_token}`,
               "Content-Type": "application/x-www-form-urlencoded",
             },
             body: new URLSearchParams({

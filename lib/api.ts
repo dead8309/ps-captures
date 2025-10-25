@@ -23,7 +23,6 @@ import {
   StreamMissingUrl,
 } from "./services/media";
 
-// Define schemas
 export const AuthResponse = Schema.Struct({
   access_token: Schema.String,
   refresh_token: Schema.String,
