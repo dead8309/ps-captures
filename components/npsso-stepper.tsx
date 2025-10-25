@@ -14,7 +14,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { defineStepper } from "@/components/ui/stepper";
-import { authAtom, npssoAtom } from "@/lib/atoms";
+import {
+  accessTokenAtom,
+  authAtom,
+  npssoAtom,
+  refreshTokenAtom,
+} from "@/lib/atoms";
 import { Spinner } from "./ui/spinner";
 
 const { Stepper } = defineStepper(
@@ -48,6 +53,8 @@ const npssoJson = '{ "npsso": "your_token_here" }';
 
 export function NpssoStepper() {
   const [token, setNpsso] = useAtom(npssoAtom);
+  const setAccessToken = useAtomSet(accessTokenAtom);
+  const setRefreshToken = useAtomSet(refreshTokenAtom);
   const authSet = useAtomSet(authAtom);
   const authResult = useAtomValue(authAtom);
   const isLoading = Result.isWaiting(authResult);
@@ -62,7 +69,10 @@ export function NpssoStepper() {
   useEffect(() => {
     Result.match(authResult, {
       onInitial: () => {},
-      onSuccess: () => {
+      onSuccess: (success) => {
+        setNpsso(token.trim());
+        setAccessToken(success.value.access_token);
+        setRefreshToken(success.value.refresh_token);
         toast.dismiss();
         toast.success("Successfully authenticated!");
       },
@@ -99,7 +109,7 @@ export function NpssoStepper() {
         }
       },
     });
-  }, [authResult]);
+  }, [authResult, token, setNpsso, setAccessToken, setRefreshToken]);
   return (
     <Stepper.Provider className="space-y-4" variant="vertical">
       {({ methods }) => (
