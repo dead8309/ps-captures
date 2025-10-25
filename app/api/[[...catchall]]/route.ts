@@ -1,4 +1,4 @@
-import { PsnApiHandler } from "@/lib/auth-handler";
+import { PsnApiHandler } from "@/lib/handlers";
 
 const { handler } = PsnApiHandler;
 

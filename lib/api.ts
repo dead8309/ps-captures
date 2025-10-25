@@ -15,36 +15,13 @@ import {
   CapturesParseError,
   InvalidToken,
 } from "./services/captures";
-import { PreviewFetchFailed } from "./services/media";
-
-// Preview errors
-export class PreviewMissingUrl extends Schema.TaggedError<PreviewMissingUrl>()(
-  "PreviewMissingUrl",
-  {
-    message: Schema.String,
-  },
-) {}
-
-export class PreviewMissingCookie extends Schema.TaggedError<PreviewMissingCookie>()(
-  "PreviewMissingCookie",
-  {
-    message: Schema.String,
-  },
-) {}
-
-export class StreamMissingUrl extends Schema.TaggedError<StreamMissingUrl>()(
-  "StreamMissingUrl",
-  {
-    message: Schema.String,
-  },
-) {}
-
-export class StreamFetchFailed extends Schema.TaggedError<StreamFetchFailed>()(
-  "StreamFetchFailed",
-  {
-    message: Schema.String,
-  },
-) {}
+import {
+  PreviewFetchFailed,
+  PreviewMissingCookie,
+  PreviewMissingUrl,
+  StreamFetchFailed,
+  StreamMissingUrl,
+} from "./services/media";
 
 // Define schemas
 export const AuthResponse = Schema.Struct({
