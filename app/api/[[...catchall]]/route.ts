@@ -81,7 +81,7 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
         const decodedCookie = decodeURIComponent(cfCookie);
 
         const media = yield* PsnMedia;
-        const result = yield* media.preview(url, decodedCookie);
+        const result = yield* media.preview(url.href, decodedCookie);
 
         const responseHeaders = Headers.fromInput({
           "content-type": result.contentType,
@@ -114,7 +114,7 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
         const decodedCookie = decodeURIComponent(cfCookie);
 
         const media = yield* PsnMedia;
-        const result = yield* media.stream(url, decodedCookie);
+        const result = yield* media.stream(url.href, decodedCookie);
 
         if (result.type === "text") {
           return yield* HttpServerResponse.text(result.text, {
@@ -152,7 +152,7 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
         const decodedCookie = decodeURIComponent(cfCookie);
 
         const media = yield* PsnMedia;
-        const result = yield* media.download(url, decodedCookie);
+        const result = yield* media.download(url.href, decodedCookie);
 
         return yield* HttpServerResponse.stream(result.stream, {
           status: 200,
