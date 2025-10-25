@@ -1,8 +1,9 @@
 "use client";
 import Hls from "hls.js";
 import { PlayIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { VideoCapture } from "@/lib/psn";
 import { cn } from "@/lib/utils";
 import { Spinner } from "./ui/spinner";
@@ -14,13 +15,29 @@ function formatDuration(seconds: number | null | undefined): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function VideoCaptureCard({
-  capture,
-  className,
-}: {
-  capture: VideoCapture;
-  className?: string;
-}) {
+export const VideoCaptureCard = forwardRef<
+  HTMLDivElement,
+  {
+    capture: VideoCapture;
+    className?: string;
+    isSelected?: boolean;
+    showCheckbox?: boolean;
+    onToggleSelection?: () => void;
+    tabIndex?: number;
+    onFocus?: () => void;
+  }
+>(function VideoCaptureCard(
+  {
+    capture,
+    className,
+    isSelected = false,
+    showCheckbox = false,
+    onToggleSelection,
+    tabIndex,
+    onFocus,
+  },
+  ref,
+) {
   const [isHovered, setIsHovered] = useState(false);
   const [videoLoading, setVideoLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -95,12 +112,36 @@ export function VideoCaptureCard({
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: Card hover interaction for video preview
     <div
-      className={cn("group relative overflow-hidden border bg-card", className)}
+      ref={ref}
+      tabIndex={tabIndex}
+      onFocus={onFocus}
+      role="button"
+      className={cn(
+        "group relative overflow-hidden border bg-card focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer",
+        isSelected && "ring-2 ring-primary ring-offset-2",
+        className,
+      )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={onToggleSelection}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggleSelection?.();
+        }
+      }}
     >
+      {showCheckbox && (
+        <div className="absolute top-2 left-2 z-10">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelection?.()}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-background/80 backdrop-blur-sm border-2"
+          />
+        </div>
+      )}
       {capture.preview ? (
         <div className="relative w-full">
           <div className="aspect-video relative">
@@ -144,7 +185,10 @@ export function VideoCaptureCard({
           <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <Button
               size="sm"
-              onClick={handleDownload}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
               className="bg-white text-black hover:bg-gray-100 text-xs font-semibold border-0 cursor-pointer"
             >
               Download
@@ -158,4 +202,4 @@ export function VideoCaptureCard({
       )}
     </div>
   );
-}
+});

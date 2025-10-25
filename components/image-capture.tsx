@@ -1,15 +1,33 @@
 "use client";
+import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { ImageCapture } from "@/lib/psn";
 import { cn } from "@/lib/utils";
 
-export function ImageCaptureCard({
-  capture,
-  className,
-}: {
-  capture: ImageCapture;
-  className?: string;
-}) {
+export const ImageCaptureCard = forwardRef<
+  HTMLDivElement,
+  {
+    capture: ImageCapture;
+    className?: string;
+    isSelected?: boolean;
+    showCheckbox?: boolean;
+    onToggleSelection?: () => void;
+    tabIndex?: number;
+    onFocus?: () => void;
+  }
+>(function ImageCaptureCard(
+  {
+    capture,
+    className,
+    isSelected = false,
+    showCheckbox = false,
+    onToggleSelection,
+    tabIndex,
+    onFocus,
+  },
+  ref,
+) {
   const handleDownload = () => {
     if (!capture.screenshotUrl) return;
     const url = `/api/captures/download?url=${encodeURIComponent(capture.screenshotUrl)}`;
@@ -18,8 +36,35 @@ export function ImageCaptureCard({
 
   return (
     <div
-      className={cn("group relative overflow-hidden border bg-card", className)}
+      ref={ref}
+      tabIndex={tabIndex}
+      onFocus={onFocus}
+      role="button"
+      className={cn(
+        "group relative overflow-hidden border bg-card focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer",
+        isSelected && "ring-2 ring-primary ring-offset-2",
+        className,
+      )}
+      onClick={onToggleSelection}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggleSelection?.();
+        }
+      }}
     >
+      {/* Selection checkbox - only show when selection mode is active */}
+      {showCheckbox && (
+        <div className="absolute top-2 left-2 z-10">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelection?.()}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-background/80 backdrop-blur-sm border-2"
+          />
+        </div>
+      )}
+
       {capture.preview ? (
         <div className="relative w-full">
           <div className="aspect-video relative">
@@ -34,10 +79,13 @@ export function ImageCaptureCard({
           {/* Dark overlay on hover */}
           <div className="absolute inset-0 bg-transparent group-hover:bg-card/50 transition-colors duration-200" />
 
-          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2">
             <Button
               size="sm"
-              onClick={handleDownload}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload();
+              }}
               className="bg-white text-black hover:bg-gray-100 text-xs font-semibold border-0 cursor-pointer"
             >
               Download
@@ -51,4 +99,4 @@ export function ImageCaptureCard({
       )}
     </div>
   );
-}
+});
