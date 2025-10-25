@@ -40,7 +40,10 @@ export function Navbar() {
   }, [authResult]);
 
   return (
-    <header className="flex justify-end items-center pt-4 md:pt-6 px-6">
+    <header className="flex justify-between items-center pt-4 md:pt-6 px-6">
+      <div className="flex items-center">
+        <h1 className="text-xl font-bold">PlayStation Captures</h1>
+      </div>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
