@@ -53,7 +53,7 @@ export function CapturesGallery({ captures }: { captures: Capture[] }) {
             const titleImageUrl = gameCaptures[0]?.titleImageUrl;
             return (
               <section key={game}>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4">
                   {titleImageUrl && (
                     <img
                       width={64}
@@ -61,12 +61,14 @@ export function CapturesGallery({ captures }: { captures: Capture[] }) {
                       style={{ objectFit: "cover" }}
                       src={titleImageUrl}
                       alt={game}
-                      className="rounded-[12px]"
+                      className="w-10 h-10 sm:w-16 sm:h-16 rounded-[12px] flex-shrink-0"
                     />
                   )}
-                  <h3 className="text-2xl font-bold text-foreground">{game}</h3>
+                  <h3 className="text-lg sm:text-2xl font-bold text-foreground truncate">
+                    {game}
+                  </h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {gameCaptures.map((c: Capture) =>
                     c.type === "video" ? (
                       <VideoCaptureCard key={c.id} capture={c} />

@@ -21,7 +21,7 @@ const { Stepper } = defineStepper(
   {
     id: "step-1",
     title: "Login to PSN",
-    description: "Open browser and sign in to PlayStation Store",
+    description: "Sign in to PlayStation Store",
     icon: <LogIn className="size-4" />,
   },
   {
@@ -127,7 +127,7 @@ export function NpssoStepper() {
                           href="https://store.playstation.com/"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm underline text-primary inline-flex items-center gap-1"
+                          className="text-sm underline text-primary inline-flex items-center gap-1 break-words"
                         >
                           https://store.playstation.com/
                           <ExternalLink className="size-3" />
@@ -146,7 +146,7 @@ export function NpssoStepper() {
                           rel="noopener noreferrer"
                           className="text-sm underline text-primary inline-flex items-center gap-1"
                         >
-                          https://ca.account.sony.com/api/v1/ssocookie
+                          ca.account.sony.com
                           <ExternalLink className="size-3" />
                         </Link>
                       </div>
