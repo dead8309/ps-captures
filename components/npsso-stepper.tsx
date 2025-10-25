@@ -14,12 +14,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { defineStepper } from "@/components/ui/stepper";
-import {
-  accessTokenAtom,
-  authAtom,
-  npssoAtom,
-  refreshTokenAtom,
-} from "@/lib/atoms";
+import { authAtom, npssoAtom } from "@/lib/atoms";
 import { Spinner } from "./ui/spinner";
 
 const { Stepper } = defineStepper(
@@ -53,8 +48,6 @@ const npssoJson = '{ "npsso": "your_token_here" }';
 
 export function NpssoStepper() {
   const [token, setNpsso] = useAtom(npssoAtom);
-  const setAccessToken = useAtomSet(accessTokenAtom);
-  const setRefreshToken = useAtomSet(refreshTokenAtom);
   const authSet = useAtomSet(authAtom);
   const authResult = useAtomValue(authAtom);
   const isLoading = Result.isWaiting(authResult);
@@ -62,17 +55,14 @@ export function NpssoStepper() {
   const handleEnterToken = (token: string) => {
     if (token.trim()) {
       toast.loading("Authenticating with PlayStation Network...");
-      authSet({ payload: { npsso: token.trim() } });
+      authSet({ npsso: token.trim() });
     }
   };
 
   useEffect(() => {
     Result.match(authResult, {
       onInitial: () => {},
-      onSuccess: (success) => {
-        setNpsso(token.trim());
-        setAccessToken(success.value.access_token);
-        setRefreshToken(success.value.refresh_token);
+      onSuccess: () => {
         toast.dismiss();
         toast.success("Successfully authenticated!");
       },
@@ -109,7 +99,7 @@ export function NpssoStepper() {
         }
       },
     });
-  }, [authResult, token, setNpsso, setAccessToken, setRefreshToken]);
+  }, [authResult]);
   return (
     <Stepper.Provider className="space-y-4" variant="vertical">
       {({ methods }) => (

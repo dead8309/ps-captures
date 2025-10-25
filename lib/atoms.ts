@@ -35,7 +35,17 @@ export const refreshTokenAtom = Atom.kvs({
   defaultValue: () => "",
 });
 
-export const authAtom = PsnClient.mutation("auth", "authenticate");
+export const authAtom = runtime.fn(
+  Effect.fnUntraced(function* ({ npsso }: { npsso: string }) {
+    const client = yield* PsnClient;
+    const result = yield* client.auth.authenticate({ payload: { npsso } });
+
+    yield* Atom.set(npssoAtom, npsso);
+    yield* Atom.set(accessTokenAtom, result.access_token);
+    yield* Atom.set(refreshTokenAtom, result.refresh_token);
+    return result;
+  }),
+);
 
 export const refreshTokenFn = (refreshToken: string) =>
   Effect.gen(function* () {
