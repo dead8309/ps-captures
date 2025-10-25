@@ -5,9 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function safeJoinCookie(parts: string[]) {
-  return parts
-    .map((p) => p.trim())
-    .filter(Boolean)
-    .join("; ");
+export function parseCookies(cookieHeader: string | undefined) {
+  const map = new Map<string, string>();
+  if (!cookieHeader) return map;
+  cookieHeader.split(";").forEach((part) => {
+    const [k, ...v] = part.trim().split("=");
+    if (k) map.set(k, v.join("="));
+  });
+  return map;
 }

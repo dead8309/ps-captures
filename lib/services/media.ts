@@ -1,22 +1,8 @@
 import { Url } from "@effect/platform";
 import { Effect, Layer, pipe, Schema, Stream } from "effect";
 
-export class PreviewMissingUrl extends Schema.TaggedError<PreviewMissingUrl>()(
-  "PreviewMissingUrl",
-  {
-    message: Schema.String,
-  },
-) {}
-
 export class PreviewMissingCookie extends Schema.TaggedError<PreviewMissingCookie>()(
   "PreviewMissingCookie",
-  {
-    message: Schema.String,
-  },
-) {}
-
-export class StreamMissingUrl extends Schema.TaggedError<StreamMissingUrl>()(
-  "StreamMissingUrl",
   {
     message: Schema.String,
   },
