@@ -18,9 +18,7 @@ import {
 import {
   PreviewFetchFailed,
   PreviewMissingCookie,
-  PreviewMissingUrl,
   StreamFetchFailed,
-  StreamMissingUrl,
 } from "./services/media";
 
 export const AuthResponse = Schema.Struct({
@@ -32,12 +30,14 @@ export const CapturesResponse = Schema.Struct({
   captures: Schema.Array(CaptureSchema),
 });
 
+const NonEmptyString = Schema.String.pipe(Schema.nonEmptyString());
+
 export class PsnApi extends HttpApi.make("psn")
   .add(
     HttpApiGroup.make("auth")
       .add(
         HttpApiEndpoint.post("authenticate", "/auth/authenticate")
-          .setPayload(Schema.Struct({ npsso: Schema.String }))
+          .setPayload(Schema.Struct({ npsso: NonEmptyString }))
           .addSuccess(AuthResponse)
           .addError(AuthCodeFailed)
           .addError(NoAuthCode)
@@ -47,7 +47,7 @@ export class PsnApi extends HttpApi.make("psn")
       )
       .add(
         HttpApiEndpoint.post("refresh", "/auth/refresh")
-          .setPayload(Schema.Struct({ refresh_token: Schema.String }))
+          .setPayload(Schema.Struct({ refresh_token: NonEmptyString }))
           .addSuccess(AuthResponse)
           .addError(RefreshFailed),
       ),
@@ -56,7 +56,7 @@ export class PsnApi extends HttpApi.make("psn")
     HttpApiGroup.make("captures")
       .add(
         HttpApiEndpoint.get("list", "/captures")
-          .setHeaders(Schema.Struct({ authorization: Schema.String }))
+          .setHeaders(Schema.Struct({ authorization: NonEmptyString }))
           .addSuccess(CapturesResponse)
           .addError(CapturesFetchFailed)
           .addError(InvalidToken)
@@ -65,24 +65,21 @@ export class PsnApi extends HttpApi.make("psn")
       )
       .add(
         HttpApiEndpoint.get("preview", "/captures/preview")
-          .setUrlParams(Schema.Struct({ url: Schema.String }))
+          .setUrlParams(Schema.Struct({ url: Schema.URL }))
           .addSuccess(Schema.Uint8Array)
-          .addError(PreviewMissingUrl)
           .addError(PreviewMissingCookie)
           .addError(PreviewFetchFailed),
       )
       .add(
         HttpApiEndpoint.get("stream", "/captures/stream")
-          .setUrlParams(Schema.Struct({ url: Schema.String }))
+          .setUrlParams(Schema.Struct({ url: Schema.URL }))
           .addSuccess(Schema.Any) // Returns either string for M3U8 or stream for video
-          .addError(StreamMissingUrl)
           .addError(StreamFetchFailed),
       )
       .add(
         HttpApiEndpoint.get("download", "/captures/download")
-          .setUrlParams(Schema.Struct({ url: Schema.String }))
+          .setUrlParams(Schema.Struct({ url: Schema.URL }))
           .addSuccess(Schema.Any) // Returns stream for download
-          .addError(StreamMissingUrl)
           .addError(StreamFetchFailed),
       ),
   )
