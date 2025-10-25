@@ -107,7 +107,7 @@ export function Navbar() {
   }, [authResult, input, setNpsso, setAccessToken, setRefreshToken]);
 
   return (
-    <header className="flex justify-end items-center pt-6 px-6">
+    <header className="flex justify-end items-center pt-4 md:pt-6 px-6">
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
