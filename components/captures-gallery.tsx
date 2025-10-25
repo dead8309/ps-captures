@@ -1,4 +1,4 @@
-import { BoxSelectIcon, HelpCircleIcon, ImageIcon, XIcon } from "lucide-react";
+import { HelpCircleIcon, ImageIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

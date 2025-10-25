@@ -112,6 +112,7 @@ export const VideoCaptureCard = forwardRef<
   };
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: Card hover interaction for selecting
     <div
       ref={ref}
       tabIndex={tabIndex}
