@@ -1,7 +1,6 @@
 "use client";
 
 import { Result, useAtomValue } from "@effect-atom/atom-react";
-import { Cause } from "effect";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { accessTokenAtom, capturesAtom } from "@/lib/atoms";

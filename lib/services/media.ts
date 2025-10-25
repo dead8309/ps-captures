@@ -132,7 +132,56 @@ export class PsnMedia extends Effect.Service<PsnMedia>()("PsnMedia", {
         };
       });
 
-    return { preview, stream };
+    const download = (url: string, cloudFrontCookie: string) =>
+      Effect.gen(function* () {
+        const upstreamResponse = yield* Effect.tryPromise({
+          try: () =>
+            fetch(url, {
+              headers: { Cookie: cloudFrontCookie },
+            }),
+          catch: (error) =>
+            new StreamFetchFailed({
+              message: `Failed to fetch upstream: ${error}`,
+            }),
+        });
+
+        if (!upstreamResponse.ok || !upstreamResponse.body) {
+          return yield* new StreamFetchFailed({
+            message: `Unable to fetch file: status ${upstreamResponse.status}, hasBody ${!!upstreamResponse.body}`,
+          });
+        }
+
+        const contentType =
+          upstreamResponse.headers.get("content-type") ??
+          "application/octet-stream";
+
+        const filename = url.split("/").pop() || "capture";
+        const contentDisposition =
+          upstreamResponse.headers.get("content-disposition") ??
+          `attachment; filename="${encodeURIComponent(filename)}"`;
+
+        if (!upstreamResponse.body) {
+          return yield* new StreamFetchFailed({
+            message: "Response body is empty",
+          });
+        }
+        const effectStream = Stream.fromReadableStream(
+          // biome-ignore lint/style/noNonNullAssertion: typehinting
+          () => upstreamResponse.body!,
+          (error) =>
+            new StreamFetchFailed({
+              message: `Stream error: ${error}`,
+            }),
+        );
+
+        return {
+          stream: effectStream,
+          contentType,
+          contentDisposition,
+        };
+      });
+
+    return { preview, stream, download };
   }),
 }) {}
 

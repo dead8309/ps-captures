@@ -12,7 +12,7 @@ export function ImageCaptureCard({
 }) {
   const handleDownload = () => {
     if (!capture.screenshotUrl) return;
-    const url = `/api/download?url=${encodeURIComponent(capture.screenshotUrl)}`;
+    const url = `/api/captures/download?url=${encodeURIComponent(capture.screenshotUrl)}`;
     window.location.href = url;
   };
 

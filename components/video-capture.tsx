@@ -26,7 +26,7 @@ export function VideoCaptureCard({
 
   const handleDownload = () => {
     if (!capture.downloadUrl) return;
-    const url = `/api/download?url=${encodeURIComponent(capture.downloadUrl)}`;
+    const url = `/api/captures/download?url=${encodeURIComponent(capture.downloadUrl)}`;
     window.location.href = url;
   };
 

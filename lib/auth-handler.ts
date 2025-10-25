@@ -155,6 +155,40 @@ const CapturesGroupLive = HttpApiBuilder.group(PsnApi, "captures", (handlers) =>
           });
         }
       }),
+    )
+    .handle("download", ({ urlParams, request }) =>
+      Effect.gen(function* () {
+        const { url } = urlParams;
+        if (!url) {
+          return yield* new StreamMissingUrl({
+            message: "Missing url parameter",
+          });
+        }
+
+        const cookieHeader = Option.getOrUndefined(
+          Headers.get(request.headers, "cookie"),
+        );
+        const cookies = parseCookies(cookieHeader);
+        const cfCookie = cookies.get("psn_cf");
+        if (!cfCookie) {
+          return yield* new StreamFetchFailed({
+            message: "Missing PSN CloudFront cookie",
+          });
+        }
+        const decodedCookie = decodeURIComponent(cfCookie);
+
+        const media = yield* PsnMedia;
+        const result = yield* media.download(url, decodedCookie);
+
+        return yield* HttpServerResponse.stream(result.stream, {
+          status: 200,
+          headers: Headers.fromInput({
+            "content-type": result.contentType,
+            "content-disposition": result.contentDisposition,
+            "cache-control": "private, max-age=0, must-revalidate",
+          }),
+        });
+      }),
     ),
 );
 

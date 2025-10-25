@@ -1,6 +1,6 @@
 "use client";
 
-import { useAtom, useAtomRef, useAtomSet } from "@effect-atom/atom-react";
+import { useAtom, useAtomSet } from "@effect-atom/atom-react";
 import { CheckCircle, Copy, ExternalLink, Key, LogIn } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";

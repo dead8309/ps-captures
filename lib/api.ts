@@ -101,6 +101,13 @@ export class PsnApi extends HttpApi.make("psn")
           .addSuccess(Schema.Any) // Returns either string for M3U8 or stream for video
           .addError(StreamMissingUrl)
           .addError(StreamFetchFailed),
+      )
+      .add(
+        HttpApiEndpoint.get("download", "/captures/download")
+          .setUrlParams(Schema.Struct({ url: Schema.String }))
+          .addSuccess(Schema.Any) // Returns stream for download
+          .addError(StreamMissingUrl)
+          .addError(StreamFetchFailed),
       ),
   )
   .prefix("/api") {}
