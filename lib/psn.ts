@@ -81,7 +81,7 @@ export const RawCaptureSchema = Schema.Struct({
 
 export const PsnCapturesResponseSchema = Schema.Struct({
   ugcDocument: Schema.Array(RawCaptureSchema),
-  nextCursorMark: Schema.String,
+  nextCursorMark: Schema.optional(Schema.String),
   limit: Schema.Number,
 }).pipe(
   Schema.transform(Schema.Struct({ captures: Schema.Array(CaptureSchema) }), {
