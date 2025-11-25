@@ -52,7 +52,7 @@ export const RawCaptureSchema = Schema.Struct({
   archived: Schema.optional(Schema.Boolean),
   videoUrl: Schema.optional(Schema.String),
   screenshotUrl: Schema.optional(Schema.String),
-  npCommId: Schema.String,
+  npCommId: Schema.optional(Schema.String),
   sceUserAccountId: Schema.String,
   ugcType: Schema.Number,
   titleImageUrl: Schema.optional(Schema.String),
